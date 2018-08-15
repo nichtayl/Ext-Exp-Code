@@ -1,0 +1,29 @@
+function dayData = setUpDayData()
+
+dayData.meanCRAllTrials = [];
+dayData.meanCRHitTrials = [];
+dayData.c_isi = [];
+dayData.date = [];
+dayData.tDay = [];
+dayData.laserDel = [];
+dayData.laserDur = [];
+dayData.mouse = [];
+dayData.CRProb = [];
+dayData.CRProb2 = [];
+dayData.CRAdjAmpAllTrials = [];
+dayData.CRAdjAmpHitTrials = [];
+dayData.URAmp = [];
+dayData.missURAmp = [];
+dayData.missURAmp2 = [];
+dayData.hitURAmp = [];
+dayData.hitURAmp2 = [];
+dayData.URInt = [];
+dayData.missURInt = [];
+dayData.hitURInt = [];
+dayData.missURInt2 = [];
+dayData.hitURInt2 = [];
+dayData.phase = [];
+dayData.peakval = [];
+dayData.peaktm = [];
+dayData.group = [];
+end
