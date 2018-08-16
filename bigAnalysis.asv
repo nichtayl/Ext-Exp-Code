@@ -19,7 +19,6 @@ savedir = 'C:\olivia\data\behfigs';
 cd(basedir)
 %mice = dir('OK*');
 
-%% record of animal numbering/identity
 % this is arbitrary animal numbering but consistent with what I used in
 % concatenateBehaviorData and concatenateBehaviorData_OSMice
 mice(1,1).name='OK135'; % WT w/ DCN-ChR2 virus
@@ -27,17 +26,17 @@ mice(2,1).name='OK137'; % WT w/ DCN-ChR2 virus
 mice(3,1).name='OK138'; % WT w/ DCN-ChR2 virus
 mice(4,1).name='OK134'; % WT w/ DCN-ChR2 virus
 mice(5,1).name='OK159'; % WT w/ DCN-EYFP virus
-mice(6,1).name='OK160'; % WT w/ DCN-EYFP virus
-mice(7,1).name='OK148'; % WT w/ failed DCN-ChR2 virus (put into control group)
-mice(8,1).name='OK161'; % WT w/ DCN-EYFP virus
-mice(9,1).name='OK162'; % WT w/ DCN-EYFP virus
+mice(6,1).name='OK160';
+mice(7,1).name='OK148';
+mice(8,1).name='OK161';
+mice(9,1).name='OK162';
 
-OSmice(1,1).name = 'OS005'; % WT
-OSmice(2,1).name = 'OS006'; % WT
-OSmice(3,1).name = 'OS007'; % WT
-OSmice(4,1).name = 'OS008'; % WT
+OSmice(1,1).name = 'OS005';
+OSmice(2,1).name = 'OS006';
+OSmice(3,1).name = 'OS007';
+OSmice(4,1).name = 'OS008';
 
-%% load behavior data
+
 load('180815_DCNChR2ExtExpt_allAnimBehData.mat')
 load('180815_DCNChR2ExtExpt_timeVector.mat')
 load('180816_WTExtExpt_allAnimBehData.mat')
