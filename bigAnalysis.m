@@ -1,7 +1,7 @@
 %%% batch concatenate animals' performace across days
 %%% assumes trialdata files have already been generated and that they have
 %%% been concatenated using concatenateBehaviorData.mat and
-%%% concatenateBehaviorData_OSMice.mat
+%%% concatenateBehaviorData_headplateOnlyMice.mat
 
 %%% NOTE ABOUT FRAME RATE ERRORS
 %%% Sessions run before 171008 have frame rate error where cameras were
