@@ -1,3 +1,12 @@
+%%% Things that I will need for the ultimate data analysis:
+%%%     1. CR Probabiltiy for each day
+%%%             a. Probability of some change in eyelid
+%%%             position at the time of laser onset (180 ms from CS onset; excluding trials )
+%%%     2. CR amplitude for each day
+%%%             a. raw eyelid position at the time of laser onset
+%%%             b. eyelid position at the time of laser onset minus eyelid
+%%%             position in the baseline period
+%%%     3. 
 
 
 clear all

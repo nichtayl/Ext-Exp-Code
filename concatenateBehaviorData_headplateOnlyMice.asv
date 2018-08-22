@@ -1,3 +1,6 @@
+% I think this is messed up 
+
+
 clear all
 close all
 
@@ -104,14 +107,18 @@ end
 %% light CS animals
 basedir = 'L:\users\olivia\behavior';
 
-mice(1,1).name = 'OK001'; % dim LED CS
-mice(2,1).name = 'OK002'; % dim LED CS
-mice(3,1).name = 'OK003'; % dim LED CS
-mice(4,1).name = 'OK004';
-mice(5,1).name = 'OK005';
-mice(6,1).name = 'OK006';
-mice(7,1).name = 'OK007';
-mice(8,1).name = 'OK008';
+mice(1,1).name = 'OK001'; % dim LED CS, CS only extinction
+mice(2,1).name = 'OK002'; % dim LED CS, CS only extinction
+mice(3,1).name = 'OK003'; % dim LED CS, CS only extinction
+mice(4,1).name = 'OK004'; % dim LED CS, CS only extinction
+mice(5,1).name = 'OK005'; % bright LED CS, CS only extinction
+mice(6,1).name = 'OK006'; % bright LED CS, CS only extinction
+mice(7,1).name = 'OK007'; % bright LED CS, CS only extinction
+mice(8,1).name = 'OK008'; % bright LED CS, CS only extinction
+mice(9,1).name = 'S146'; % bring LED CS, unpaired extinction
+mice(9,1).name = 'S147'; % bring LED CS, unpaired extinction
+mice(9,1).name = 'S148'; % bring LED CS, unpaired extinction
+mice(9,1).name = 'S149'; % bring LED CS, unpaired extinction
 
 for m = 1:length(mice);
     
@@ -167,13 +174,19 @@ for m = 1:length(mice);
                     extdat.laserDel = [extdat.laserDel;trials.laser.delay];
                 end
                 
-                %if m<=4
+                if m<=4
                     % depends on not adding more animals to the groups
-                    % let group 3 be CS only extinction animals
-                    grouptemp = 3;
-                %else
-                    %grouptemp = 2;
-                %end
+                    % let group 4 be CS only extinction animals with dim
+                    % LED CS
+                    grouptemp = 4;
+                elseif m<=8
+                    % let group 5 be CS only extinction animals with bright LED CS 
+                    grouptemp = 5;
+                else
+                    % let group 6 be explicitly unpaired extinction animals
+                    % with bright LED CS
+                    grouptemp = 6;
+                end
                 extdat.group = [extdat.group; grouptemp*ones(length(trials.c_csnum),1)];
                 
                 tDay = tDay + 1;

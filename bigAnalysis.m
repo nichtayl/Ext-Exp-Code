@@ -37,11 +37,41 @@ OSmice(2,1).name = 'OS006'; % WT
 OSmice(3,1).name = 'OS007'; % WT
 OSmice(4,1).name = 'OS008'; % WT
 
+lightmice(1,1).name = 'OK001'; % dim LED CS, CS only extinction
+lightmice(2,1).name = 'OK002'; % dim LED CS, CS only extinction
+lightmice(3,1).name = 'OK003'; % dim LED CS, CS only extinction
+lightmice(4,1).name = 'OK004'; % dim LED CS, CS only extinction
+lightmice(5,1).name = 'OK005'; % bright LED CS, CS only extinction
+lightmice(6,1).name = 'OK006'; % bright LED CS, CS only extinction
+lightmice(7,1).name = 'OK007'; % bright LED CS, CS only extinction
+lightmice(8,1).name = 'OK008'; % bright LED CS, CS only extinction
+lightmice(9,1).name = 'S146'; % bring LED CS, unpaired extinction
+lightmice(9,1).name = 'S147'; % bring LED CS, unpaired extinction
+lightmice(9,1).name = 'S148'; % bring LED CS, unpaired extinction
+lightmice(9,1).name = 'S149'; % bring LED CS, unpaired extinction
+
 %% load behavior data
 load('180815_DCNChR2ExtExpt_allAnimBehData.mat')
 load('180815_DCNChR2ExtExpt_timeVector.mat')
 load('180816_WTExtExpt_allAnimBehData.mat')
 
+%% turn the trial data into useful data
+%%% Things that I will need for the ultimate data analysis:
+%%%     1. CR Probabiltiy for each day
+%%%             a. Probability of some change in eyelid
+%%%             position at the time of laser onset (180 ms from CS onset; excluding trials )
+%%%     2. CR amplitude for each day
+%%%             a. raw eyelid position at the time of laser onset
+%%%             b. eyelid position at the time of laser onset minus eyelid
+%%%             position in the baseline period
+%%%     3. startle probability and amplitude for each day
+%%%             a. alpha startle - short latency
+%%%             b. beta startle - ~80 ms latency
+%%%     4. session number and date
+%%%     5. 
+
+rbdatDayData = getDayData(rbdat);
+extdatDayData = getDayData(extdat);
 
 
 %% load the days to plot
@@ -65,6 +95,7 @@ plotData.during.urint.data = nan(9,18);
 plotData.during.missurint.data = nan(9,18);
 plotData.during.hiturint.data = nan(9,18);
 plotData.during.peaktm.data = nan(9,18);
+
 plotData.after.crprob.data = nan(4,18);
 plotData.after.cradjamp.data = nan(4,18);
 plotData.after.cradjampHit.data=nan(4,18);
@@ -75,6 +106,7 @@ plotData.after.urint.data = nan(9,18);
 plotData.after.missurint.data = nan(9,18);
 plotData.after.hiturint.data = nan(9,18);
 plotData.after.peaktm.data = nan(9,18);
+
 plotData.late.crprob.data = nan(4,18);
 plotData.late.cradjamp.data = nan(4,18);
 plotData.late.cradjampHit.data=nan(4,18);
@@ -85,6 +117,7 @@ plotData.late.urint.data = nan(9,18);
 plotData.late.missurint.data = nan(9,18);
 plotData.late.hiturint.data = nan(9,18);
 plotData.late.peaktm.data = nan(9,18);
+
 plotData.early.crprob.data = nan(9,18);
 plotData.early.cradjamp.data = nan(9,18);
 plotData.early.cradjampHit.data=nan(9,18);
@@ -95,6 +128,7 @@ plotData.early.urint.data = nan(9,18);
 plotData.early.missurint.data = nan(9,18);
 plotData.early.hiturint.data = nan(9,18);
 plotData.early.peaktm.data = nan(9,18);
+
 eyelidPos.during.mean = nan(18,1800);
 eyelidPos.during.sem = nan(18,1800);
 eyelidPos.after.mean = nan(18,800);
@@ -105,6 +139,7 @@ eyelidPos.early.mean = nan(18,1800);
 eyelidPos.early.sem = nan(18,1800);
 eyelidpos.during.hitmean = nan(18,1800);
 eyelidpos.during.missmean = nan(18,1800);
+
 for r = 2:rows % start at row 2 because row 1 is just headers
     for c = 3:cols % start at col 3 because rows 1-2 is just headers
         thisDay = raw{r,c};

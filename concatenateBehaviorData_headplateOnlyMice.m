@@ -1,3 +1,8 @@
+% I think this is messed up 
+% it was messed up because of directories that needed to transfer,
+% transferring and then going to check again tomorrow
+
+
 clear all
 close all
 
@@ -102,7 +107,7 @@ end
 
 
 %% light CS animals
-basedir = 'L:\users\olivia\behavior';
+basedir = 'L:\users\okim\behavior';
 
 mice(1,1).name = 'OK001'; % dim LED CS, CS only extinction
 mice(2,1).name = 'OK002'; % dim LED CS, CS only extinction
@@ -164,7 +169,7 @@ for m = 1:length(mice);
                 
                 thisDate = str2double(days(d).name);
                 extdat.date = [extdat.date;thisDate*ones(length(trials.c_csnum),1)];
-                extdat.mouse= [extdat.mouse;m*ones(length(trials.c_csnum),1)];
+                extdat.mouse= [extdat.mouse;(m+4)*ones(length(trials.c_csnum),1)];
                 
                 if isfield(trials, 'laser')
                     extdat.laserDur = [extdat.laserDur;trials.laser.dur];
