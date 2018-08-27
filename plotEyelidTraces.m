@@ -10,7 +10,7 @@
 % days to be included in the figure
 
 function [plotMe] = plotEyelidTraces(eyelidpos, groups, daynums, timeVector,...
-    legendLabels, titlestring, xlabelstring, ylabelstring)
+    legendLabels, titlestring, xlabelstring, ylabelstring, norm)
 
 figure
 hold on
@@ -21,6 +21,10 @@ for d = 1:days
     averageMe = nan(animals,200);
     for a = 1:animals
         averageMe(a,1:200) = eyelidpos{groups(a),daynums(a,d)}(1,1:200);
+        if norm == 1 % then plot data relative to baseline of the mean trace
+            baseline = mean(averageMe(a,1:40));
+            averageMe(a,1:200) = averageMe(a,1:200)-baseline;
+        end
     end
     
     % mean returns a row vector containing the mean of each column as of

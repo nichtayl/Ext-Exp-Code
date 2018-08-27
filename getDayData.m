@@ -20,6 +20,12 @@ output.meanHitEyelidTrace = [];
 output.semHitEyelidTrace = [];
 output.meanMissEyelidTrace = [];
 output.semMissEyelidTrace = [];
+output.meanEyelidTraceAdj = [];
+output.semEyelidTraceAdj = [];
+output.meanHitEyelidTraceAdj = [];
+output.semHitEyelidTraceAdj = [];
+output.meanMissEyelidTraceAdj = [];
+output.semMissEyelidTraceAdj = [];
 for m = 1:mousenum
     daylist = unique(data.date(data.mouse==m,1));
     
@@ -42,6 +48,7 @@ for m = 1:mousenum
         uramp = nan(length(pairedTrials),1);
         astartleamp = nan(length(pairedTrials),1);
         urint = nan(length(pairedTrials),1);
+        eyelidposadj = nan(length(pairedTrials),200);
         for i = 1:length(pairedTrials)
             baseline(i,1) = mean(data.eyelidpos(pairedTrials(i), 1:39));
             cradjamp(i,1) = data.eyelidpos(pairedTrials(i), 76) - baseline(i,1);
@@ -55,7 +62,7 @@ for m = 1:mousenum
             else
                 stable(i,1)=1;
             end
-            
+            eyelidposadj(i,1:200)=data.eyelidpos(pairedTrials(i),1:200)-baseline(i,1);
             astartleamp(i,1) = max(data.eyelidpos(pairedTrials(i), 40:50)) - baseline(i,1); % the max amplitude in the first 50 ms after the CS is presented
         end
         
@@ -77,19 +84,31 @@ for m = 1:mousenum
         output.meanHitURIntegral(end+1,1)=mean(urint(stable & baseline<0.3 & cradjamp>=crcrit));
         output.meanMissURIntegral(end+1,1)=mean(urint(stable & baseline<0.3 & cradjamp<crcrit));
         
+        % eyelid trace stuff
         output.meanEyelidTrace(end+1, 1:200) = mean(data.eyelidpos(pairedTrials,:));
         output.semEyelidTrace(end+1, 1:200) = std(data.eyelidpos(pairedTrials,:))/sqrt(length(pairedTrials));
         output.meanHitEyelidTrace(end+1, 1:200) = nan(1,200);
         output.semHitEyelidTrace(end+1, 1:200) = nan(1,200);
         output.meanMissEyelidTrace(end+1, 1:200) = nan(1,200);
         output.semMissEyelidTrace(end+1, 1:200) = nan(1,200);
+        
+        output.meanEyelidTraceAdj(end+1, 1:200) = mean(eyelidposadj);
+        output.semEyelidTraceAdj(end+1, 1:200) = std(eyelidposadj)/sqrt(length(eyelidposadj));
+        output.meanHitEyelidTraceAdj(end+1, 1:200) = nan(1,200);
+        output.semHitEyelidTraceAdj(end+1, 1:200) = nan(1,200);
+        output.meanMissEyelidTraceAdj(end+1, 1:200) = nan(1,200);
+        output.semMissEyelidTraceAdj(end+1, 1:200) = nan(1,200);
         if hitTrials > 0
-            output.meanHitEyelidTrace(end, 1:200) = mean(data.eyelidpos(pairedTrials(cradjamp>crcrit & stable & baseline<0.3),:));
-            output.semHitEyelidTrace(end, 1:200) = std(data.eyelidpos(pairedTrials(cradjamp>crcrit & stable & baseline<0.3),:))/sqrt(length(pairedTrials));
+            output.meanHitEyelidTrace(end, 1:200) = mean(eyelidposadj(cradjamp>crcrit & stable & baseline<0.3, :));
+            output.semHitEyelidTrace(end, 1:200) = std(eyelidposadj(cradjamp>crcrit & stable & baseline<0.3, :))/sqrt(length(pairedTrials));
+            output.meanHitEyelidTraceAdj(end, 1:200) = mean(eyelidposadj(cradjamp>crcrit & stable & baseline<0.3, :));
+            output.semHitEyelidTraceAdj(end, 1:200) = std(eyelidposadj(cradjamp>crcrit & stable & baseline<0.3, :))/sqrt(length(pairedTrials));
         end
         if hitTrials < totalTrials
-            output.meanMissEyelidTrace(end, 1:200) = mean(data.eyelidpos(pairedTrials(cradjamp<crcrit & stable & baseline<0.3),:));
-            output.semMissEyelidTrace(end, 1:200) = std(data.eyelidpos(pairedTrials(cradjamp<crcrit & stable & baseline<0.3),:))/sqrt(length(pairedTrials));
+            output.meanMissEyelidTrace(end, 1:200) = mean(eyelidposadj(cradjamp<crcrit & stable & baseline<0.3, :));
+            output.semMissEyelidTrace(end, 1:200) = std(eyelidposadj(cradjamp<crcrit & stable & baseline<0.3,:))/sqrt(length(eyelidposadj));
+            output.meanMissEyelidTraceAdj(end, 1:200) = mean(eyelidposadj(cradjamp<crcrit & stable & baseline<0.3,:));
+            output.semMissEyelidTraceAdj(end, 1:200) = std(eyelidposadj(cradjamp<crcrit & stable & baseline<0.3,:))/sqrt(length(eyelidposadj));
         end
     end
 end

@@ -1,4 +1,4 @@
-function [eyelidpos] = trialsAndDatesIntoEyelidTraces(datespreadsheet_headers, datespreadsheet_dates, dayData, phase)
+function [eyelidpos] = trialsAndDatesIntoEyelidTraces(datespreadsheet_headers, datespreadsheet_dates, dayData, phase, adj)
 [rows cols] = size(datespreadsheet_dates);
 eyelidpos.mean = {};
 eyelidpos.sem = {};
@@ -43,12 +43,22 @@ for i = 1:length(idx)
             elseif strcmpi(thisMouse,'OK162')
                 mouse=9;
             end
-            eyelidpos.mean{mouse,c-2} = dayData.meanEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
-            eyelidpos.sem{mouse,c-2} = dayData.semEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
-            eyelidpos.hitmean{mouse,c-2} = dayData.meanHitEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
-            eyelidpos.hitsem{mouse,c-2} = dayData.semHitEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
-            eyelidpos.missmean{mouse,c-2} = dayData.meanMissEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
-            eyelidpos.misssem{mouse,c-2} = dayData.semMissEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+            if adj == 0
+                eyelidpos.mean{mouse,c-2} = dayData.meanEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.sem{mouse,c-2} = dayData.semEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.hitmean{mouse,c-2} = dayData.meanHitEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.hitsem{mouse,c-2} = dayData.semHitEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.missmean{mouse,c-2} = dayData.meanMissEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.misssem{mouse,c-2} = dayData.semMissEyelidTrace(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+            else
+                eyelidpos.mean{mouse,c-2} = dayData.meanEyelidTraceAdj(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.sem{mouse,c-2} = dayData.semEyelidTraceAdj(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.hitmean{mouse,c-2} = dayData.meanHitEyelidTraceAdj(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.hitsem{mouse,c-2} = dayData.semHitEyelidTraceAdj(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.missmean{mouse,c-2} = dayData.meanMissEyelidTraceAdj(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+                eyelidpos.misssem{mouse,c-2} = dayData.semMissEyelidTraceAdj(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1:200);
+
+            end
             
             clear mouse thisDay thisMouse
         end
