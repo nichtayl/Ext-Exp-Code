@@ -4,12 +4,18 @@ mousenum = length(unique(data.mouse));
 output.mouse = [];
 output.date = [];
 output.meanCRAdjAmp = [];
+output.hitCRAdjAmp = [];
+output.missCRAdjAmp = [];
 output.CRProb = [];
 output.meanAStartleAmp = [];
 output.meanURAmp = [];
+output.meanURIntegral = [];
 output.meanHitURAmp = [];
+output.meanHitURIntegral = [];
 output.meanMissURAmp = [];
+ouptut.meanMissURIntegral = [];
 output.meanEyelidTrace = [];
+output.semEyelidTrace = [];
 output.meanHitEyelidTrace = [];
 output.meanMissEyelidTrace = [];
 for m = 1:mousenum
@@ -62,13 +68,28 @@ for m = 1:mousenum
         output.mouse(end+1,1) = m;
         output.date(end+1,1) = daylist(d);
         output.meanCRAdjAmp(end+1,1) = mean(cradjamp(stable & baseline<0.3));
+        output.hitCRAdjAmp(end+1,1) = mean(cradjamp(stable & baseline<0.3 & cradjamp>crcrit));
+        output.missCRAdjAmp(end+1,1) = mean(cradjamp(stable & baseline<0.3 & cradjamp<=crcrit));
         output.meanAStartleAmp(end+1,1) = mean(astartleamp(stable & baseline<0.3));
         output.meanURAmp(end+1,1) = mean(uramp(stable & baseline<0.3));
         output.meanHitURAmp(end+1,1) = mean(uramp(stable & baseline<0.3 & cradjamp>=0.1));
         output.meanMissURAmp(end+1,1) = mean(uramp(stable & baseline<0.3 & cradjamp<0.1));
         output.CRProb(end+1,1) = hitTrials/totalTrials;
         
-        output.mea
+        output.meanURIntegral(end+1,1)=
+        output.meanHitURIntegral(end+1,1)=
+        output.meanMissURIntegral(end+1,1)=
+        
+        output.meanEyelidTrace(end+1, 1:200) = mean(data.eyelidpos(pairedTrials,:));
+        output.semEyelidTrace(end+1, 1:200) = std(data.eyelidpos(pairedTrials,:))/sqrt(length(pairedTrials));
+        output.meanHitEyelidTrace(end+1, 1:200) = nan(1,200);
+        output.meanMissEyelidTrace(end+1, 1:200) = nan(1,200);
+        if hitTrials > 0
+            output.meanHitEyelidTrace(end, 1:200) = mean(data.eyelidpos(pairedTrials(cradjamp>crcrit & stable & baseline<0.3),:));
+        end
+        if hitTrials < totalTrials
+            output.meanMissEyelidTrace(end, 1:200) = mean(data.eyelidpos(pairedTrials(cradjamp<crcrit & stable & baseline<0.3),:));
+        end
     end
 end
 

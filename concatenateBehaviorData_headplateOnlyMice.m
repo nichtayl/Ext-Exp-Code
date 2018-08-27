@@ -117,10 +117,10 @@ mice(5,1).name = 'OK005'; % bright LED CS, CS only extinction
 mice(6,1).name = 'OK006'; % bright LED CS, CS only extinction
 mice(7,1).name = 'OK007'; % bright LED CS, CS only extinction
 mice(8,1).name = 'OK008'; % bright LED CS, CS only extinction
-mice(9,1).name = 'S146'; % bring LED CS, unpaired extinction
-mice(9,1).name = 'S147'; % bring LED CS, unpaired extinction
-mice(9,1).name = 'S148'; % bring LED CS, unpaired extinction
-mice(9,1).name = 'S149'; % bring LED CS, unpaired extinction
+mice(9,1).name = 'S146'; % bright LED CS, unpaired extinction
+mice(10,1).name = 'S147'; % bright LED CS, unpaired extinction
+mice(11,1).name = 'S148'; % bright LED CS, unpaired extinction
+mice(12,1).name = 'S149'; % bright LED CS, unpaired extinction
 
 for m = 1:length(mice);
     

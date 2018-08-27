@@ -70,46 +70,8 @@ load('180816_WTExtExpt_allAnimBehData.mat')
 %%%     4. session number and date
 %%%     5. 
 
-% rbdat first, data for the animals in my DCN-ChR2 experiment
-mousenum = length(unique(rbdat.mouse));
-for m = 1:mousenum
-    daylist = unique(rbdat.date(rbdat.mouse==m,1));
-    for d = 1:length(daylist)
-        if d==1
-            % this will be the day with the tone amplitude adjustments on
-            % CS-only trials
-            
-            % leave this here as a reminder to do something to look at the
-            % development of the startle response after CS-alone
-            % presentations versus the startle response when the US is
-            % paired with the CS
-        end
-        pairedTrials = find(rbdat.mouse == m & rbdat.date == daylist(d) & ...
-            rbdat.c_csdur>0 & rbdat.c_usdur>0);
-        
-        baseline = nan(length(pairedTrials),1);
-        stable = nan(length(pairedTrials),1);
-        cradjamp = nan(length(pairedTrials),1);
-        astartleamp = nan(length(pairedTrials),1);
-        for i = 1:length(pairedTrials)
-            baseline(i,1) = mean(rbdat.eyelidpos(pairedTrials(i), 1:39));            
-            cradjamp(i,1) = rbdat.eyelidpos(pairedTrials(i), 76) - baseline(i,1);
-            
-            % if the eyelid moves more than 0.1 FEC from baseline, say that
-            % there was emough movement in baseline to throw the trial away
-            deflectionsDuringBaseline = abs(rbdat.eyelidpos(pairedTrials(i), 1:39) - baseline(i,1));
-            if max(deflectionsDuringBaseline)>=0.1
-                stable(i,1)=0;
-            else
-                stable(i,1)=1;
-            end
-            
-            astartleamp(i,1) = max(rbdat.eyelidpos(pairedTrials(i), 40:50)); % the max amplitude in the first 50 ms after the CS is presented
-        end
-        
-        
-    end
-end
+rbdatDayData = getDayData(rbdat, timeVector, [0.2; 0.1; 0.2; 0.1; 0.1; 0.1; 0.1; 0.1; 0.1]); 
+extdatDayData = getDayData(extdat, timeVector, 0.1*ones(length(unique(extdat.mouse)),1));
 
 
 %% load the days to plot
@@ -120,327 +82,13 @@ end
 cd('C:\olivia\data summaries')
 [num, txt, raw] = xlsread('ExperimentalAndControl.xlsx');
 
-%% get performance metrics for whole days for each mouse/day you want to plot
-% use CRProb2 for 135 and 138, CRProb for 137 and 134
-[rows cols] = size(raw);
-plotData.during.crprob.data = nan(9,18);
-plotData.during.cradjamp.data = nan(9,18);
-plotData.during.cradjampHit.data=nan(9,18);
-plotData.during.uramp.data = nan(9,18);
-plotData.during.missuramp.data = nan(9,18);
-plotData.during.hituramp.data = nan(9,18);
-plotData.during.urint.data = nan(9,18);
-plotData.during.missurint.data = nan(9,18);
-plotData.during.hiturint.data = nan(9,18);
-plotData.during.peaktm.data = nan(9,18);
 
-plotData.after.crprob.data = nan(4,18);
-plotData.after.cradjamp.data = nan(4,18);
-plotData.after.cradjampHit.data=nan(4,18);
-plotData.after.uramp.data = nan(4,18);
-plotData.after.missuramp.data = nan(9,18);
-plotData.after.hituramp.data = nan(9,18);
-plotData.after.urint.data = nan(9,18);
-plotData.after.missurint.data = nan(9,18);
-plotData.after.hiturint.data = nan(9,18);
-plotData.after.peaktm.data = nan(9,18);
+%% organize and plot summary statistic data
+[plotData.during] = trialsAndDatesIntoSummaryData(txt, raw, rbdatDayData, 'during'); % only works for the rbdat dataset so far
+[plotData.after] = trialsAndDatesIntoSummaryData(txt, raw, rbdatDayData, 'after'); % only works for the rbdat dataset so far
+[plotData.late] = trialsAndDatesIntoSummaryData(txt, raw, rbdatDayData, 'late'); % only works for the rbdat dataset so far
+[plotData.early] = trialsAndDatesIntoSummaryData(txt, raw, rbdatDayData, 'early'); % only works for the rbdat dataset so far
 
-plotData.late.crprob.data = nan(4,18);
-plotData.late.cradjamp.data = nan(4,18);
-plotData.late.cradjampHit.data=nan(4,18);
-plotData.late.uramp.data = nan(4,18);
-plotData.late.missuramp.data = nan(9,18);
-plotData.late.hituramp.data = nan(9,18);
-plotData.late.urint.data = nan(9,18);
-plotData.late.missurint.data = nan(9,18);
-plotData.late.hiturint.data = nan(9,18);
-plotData.late.peaktm.data = nan(9,18);
-
-plotData.early.crprob.data = nan(9,18);
-plotData.early.cradjamp.data = nan(9,18);
-plotData.early.cradjampHit.data=nan(9,18);
-plotData.early.uramp.data = nan(9,18);
-plotData.early.missuramp.data = nan(9,18);
-plotData.early.hituramp.data = nan(9,18);
-plotData.early.urint.data = nan(9,18);
-plotData.early.missurint.data = nan(9,18);
-plotData.early.hiturint.data = nan(9,18);
-plotData.early.peaktm.data = nan(9,18);
-
-eyelidPos.during.mean = nan(18,1800);
-eyelidPos.during.sem = nan(18,1800);
-eyelidPos.after.mean = nan(18,800);
-eyelidPos.after.sem = nan(18,800);
-eyelidPos.late.sem = nan(18,800);
-eyelidPos.late.mean = nan(18,800);
-eyelidPos.early.mean = nan(18,1800);
-eyelidPos.early.sem = nan(18,1800);
-eyelidpos.during.hitmean = nan(18,1800);
-eyelidpos.during.missmean = nan(18,1800);
-
-for r = 2:rows % start at row 2 because row 1 is just headers
-    for c = 3:cols % start at col 3 because rows 1-2 is just headers
-        thisDay = raw{r,c};
-        thisMouse = raw{r,1};
-        thisPhase = raw{r,2};
-        mouse = 0;
-        eyelidposCol = 1;
-        %try
-        % this if statement is here since I want to have different CR
-        % criterion for OK138 since he had a big startle/SLR
-        if ~ischar(thisDay) && ~isnan(thisDay) % skip days without numbers
-            if strcmpi(thisMouse,'OK135')
-                mouse=1;
-                eyelidposcol = 1;
-                crprob = dayData.CRProb2(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx2,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx2,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx2,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx2,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx2,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx2,:));
-            elseif strcmpi(thisMouse,'OK137')
-                mouse=2;
-                eyelidposCol = 201;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            elseif strcmpi(thisMouse,'OK138')
-                mouse=3;
-                eyelidposCol = 401;
-                crprob = dayData.CRProb2(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx2,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx2,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx2,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx2,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx2,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx2,:));
-            elseif strcmpi(thisMouse,'OK134')
-                mouse=4;
-                eyelidposCol = 601;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            elseif strcmpi(thisMouse,'OK159')
-                mouse=5;
-                eyelidposCol = 801;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            elseif strcmpi(thisMouse,'OK160')
-                mouse=6;
-                eyelidposCol = 1001;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            elseif strcmpi(thisMouse,'OK148')
-                mouse=7;
-                eyelidposCol = 1201;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            elseif strcmpi(thisMouse,'OK161')
-                mouse=8;
-                eyelidposCol = 1401;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            elseif strcmpi(thisMouse,'OK162')
-                mouse=9;
-                eyelidposCol = 1601;
-                crprob = dayData.CRProb(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-                missuramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hituramp = mean(perfData.URAmp(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                missurint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.missIdx,1));
-                hiturint = mean(perfData.URInt(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-                eyelidpos.during.hitmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.hitIdx,:));
-                eyelidpos.during.missmean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0 & perfData.missIdx,:));
-            end
-            cradjampAll = dayData.CRAdjAmpAllTrials(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-            cradjampHit = dayData.CRAdjAmpHitTrials(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-            uramp = dayData.URAmp(dayData.date(:,1)==thisDay & dayData.mouse(:,1)==mouse,1);
-            peaktm = mean(perfData.peaktm(perfData.date(:,1)==thisDay & perfData.mouse(:,1)==mouse & perfData.hitIdx,1));
-            
-            if strcmpi(thisPhase,'during')
-                plotData.during.crprob.data(mouse,c-2) = crprob;
-                plotData.during.cradjamp.data(mouse,c-2) = cradjampAll;
-                plotData.during.cradjampHit.data(mouse,c-2) = cradjampHit;
-                plotData.during.uramp.data(mouse,c-2)=uramp;
-                plotData.during.missuramp.data(mouse,c-2)=missuramp;
-                plotData.during.hituramp.data(mouse,c-2)=hituramp;
-                plotData.during.missurint.data(mouse,c-2)=missurint;
-                plotData.during.hiturint.data(mouse,c-2)=hiturint;
-                plotData.during.peaktm.data(mouse,c-2)=peaktm;
-                
-                eyelidPos.during.mean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:));
-                eyelidPos.during.sem(c-2,eyelidposCol:eyelidposCol+199) = std(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:))/sqrt(...
-                    sum(perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0));
-            elseif strcmpi(thisPhase,'after')
-                plotData.after.crprob.data(mouse,c-2) = crprob;
-                plotData.after.cradjamp.data(mouse,c-2) = cradjampAll;
-                plotData.after.cradjampHit.data(mouse,c-2) = cradjampHit;
-                plotData.after.uramp.data(mouse,c-2)=uramp;
-                plotData.after.missuramp.data(mouse,c-2)=missuramp;
-                plotData.after.hituramp.data(mouse,c-2)=hituramp;
-                plotData.after.missurint.data(mouse,c-2)=missurint;
-                plotData.after.hiturint.data(mouse,c-2)=hiturint;
-                plotData.after.peaktm.data(mouse,c-2)=peaktm;
-                
-                eyelidPos.after.mean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:));
-                eyelidPos.after.sem(c-2,eyelidposCol:eyelidposCol+199) = std(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:))/sqrt(...
-                    sum(perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0));
-            elseif strcmpi(thisPhase,'late')
-                plotData.late.crprob.data(mouse,c-2) = crprob;
-                plotData.late.cradjamp.data(mouse,c-2) = cradjampAll;
-                plotData.late.cradjampHit.data(mouse,c-2) = cradjampHit;
-                plotData.late.uramp.data(mouse,c-2)=uramp;
-                plotData.late.missuramp.data(mouse,c-2)=missuramp;
-                plotData.late.hituramp.data(mouse,c-2)=hituramp;
-                plotData.late.missurint.data(mouse,c-2)=missurint;
-                plotData.late.hiturint.data(mouse,c-2)=hiturint;
-                plotData.late.peaktm.data(mouse,c-2)=peaktm;
-                
-                eyelidPos.late.mean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:));
-                eyelidPos.late.sem(c-2,eyelidposCol:eyelidposCol+199) = std(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:))/sqrt(...
-                    sum(perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0));
-            elseif strcmpi(thisPhase,'early')
-                plotData.early.crprob.data(mouse,c-2) = crprob;
-                plotData.early.cradjamp.data(mouse,c-2) = cradjampAll;
-                plotData.early.cradjampHit.data(mouse,c-2) = cradjampHit;
-                plotData.early.uramp.data(mouse,c-2)=uramp;
-                plotData.early.missuramp.data(mouse,c-2)=missuramp;
-                plotData.early.hituramp.data(mouse,c-2)=hituramp;
-                plotData.early.missurint.data(mouse,c-2)=missurint;
-                plotData.early.hiturint.data(mouse,c-2)=hiturint;
-                plotData.early.peaktm.data(mouse,c-2)=peaktm;
-                
-                eyelidPos.early.mean(c-2,eyelidposCol:eyelidposCol+199) = mean(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:));
-                eyelidPos.late.sem(c-2,eyelidposCol:eyelidposCol+199) = std(perfData.eyelidpos...
-                    (perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0,:))/sqrt(...
-                    sum(perfData.date(:,1)==thisDay & ...
-                    perfData.mouse(:,1)==mouse & perfData.type==1 &...
-                    perfData.baselineMvt==0));
-            end
-        end
-        
-        %catch isnan(thisDay)
-        %end
-        
-        clear crprob cradjampAll uramp mouse thisDay thisMouse thisPhase
-    end
-end
-
-pause
-
-
-%% make plots for CR Prob, amp, and uramp
 colordef black
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.crprob, plotData.after.crprob, plotData.late.crprob, plotData.early.crprob, 'CR Probability', [0 1], [0 19], 'mean');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.cradjamp, plotData.after.cradjamp, plotData.late.cradjamp, plotData.early.cradjamp, 'CR Amplitude (adjusted)', [0 0.6], [0 19], 'mean');
@@ -448,11 +96,9 @@ colordef black
 plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plotData.late.uramp, plotData.early.uramp, 'UR Amplitude', [0.5 1.05], [0 19], 'mean')
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hituramp, plotData.after.hituramp, plotData.late.hituramp, plotData.early.hituramp, 'UR Amp (adjusted; Hit trials only)', [0.5 1.05], [0 19], 'mean');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missuramp, plotData.after.missuramp, plotData.late.missuramp, plotData.early.missuramp, 'UR Amp (adjusted; Miss trials only)', [0.5 1.05], [0 19], 'mean');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hiturint, plotData.after.hiturint, plotData.late.hiturint, plotData.early.hiturint, 'UR Amp (adjusted; Hit trials only)', [0.03 0.2], [0 19], 'mean');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Amp (adjusted; Miss trials only)', [0.03 0.2], [0 19], 'mean');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.peaktm, plotData.after.peaktm, plotData.late.peaktm, plotData.early.peaktm, 'Latency to Eyelidpos Peak in ISI', [100 220], [0 19], 'mean');
-
-
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hiturint, plotData.after.hiturint, plotData.late.hiturint, plotData.early.hiturint, 'UR Integral (adjusted; Hit trials only)', [0.03 0.5], [0 19], 'mean');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral (adjusted; Miss trials only)', [0.03 0.5], [0 19], 'mean');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral ', [0.03 0.5], [0 19], 'mean');
 
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.crprob, plotData.after.crprob, plotData.late.crprob, plotData.early.crprob, 'CR Probability', [0 1], [0 19], 'median');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.cradjamp, plotData.after.cradjamp, plotData.late.cradjamp, plotData.early.cradjamp, 'CR Amplitude (adjusted)', [0 0.6], [0 19], 'median');
@@ -460,21 +106,30 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
 plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plotData.late.uramp, plotData.early.uramp, 'UR Amplitude', [0.5 1.05], [0 19], 'median')
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hituramp, plotData.after.hituramp, plotData.late.hituramp, plotData.early.hituramp, 'UR Amp (adjusted; Hit trials only)', [0.5 1.05], [0 19], 'median');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missuramp, plotData.after.missuramp, plotData.late.missuramp, plotData.early.missuramp, 'UR Amp (adjusted; Miss trials only)', [0.5 1.05], [0 19], 'median');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hiturint, plotData.after.hiturint, plotData.late.hiturint, plotData.early.hiturint, 'UR Amp (adjusted; Hit trials only)', [0.03 0.2], [0 19], 'median');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Amp (adjusted; Miss trials only)', [0.03 0.2], [0 19], 'median');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.peaktm, plotData.after.peaktm, plotData.late.peaktm, plotData.early.peaktm, 'Latency to Eyelidpos Peak in ISI', [100 220], [0 19], 'median');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hiturint, plotData.after.hiturint, plotData.late.hiturint, plotData.early.hiturint, 'UR Integral (adjusted; Hit trials only)', [0.03 0.5], [0 19], 'median');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral (adjusted; Miss trials only)', [0.03 0.5], [0 19], 'median');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral ', [0.03 0.5], [0 19], 'median');
 
 
+%% organize and mean eyelid trace data
+
+[eyelidTrace.during] = trialsAndDatesIntoEyelidTraces(txt, raw, rbdatDayData, 'during');
+[eyelidTrace.after] = trialsAndDatesIntoEyelidTraces(txt, raw, rbdatDayData, 'after');
+[eyelidTrace.late] = trialsAndDatesIntoEyelidTraces(txt, raw, rbdatDayData, 'late');
+[eyelidTrace.early] = trialsAndDatesIntoEyelidTraces(txt, raw, rbdatDayData, 'early');
 
 %% plot mean hit and miss eyelid traces from first 4 days of during manipulation for experimental animals
+[plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [1,2,3,4], [2,3,);
 legLabs.one='first day during';
 legLabs.two='second day during';
 legLabs.three='third day during';
 legLabs.four='fourth day during';
 [baseline, first, third, final] = plotEyelidTraces_groupDataOK135478...
-    (timeVector, eyelidpos.during.hitmean, ...
+    (timeVector, plotData.during.eyelidpos.mean, ...
     [3,3,3,3;4,4,4,4;5,5,5,5;6,6,6,6], legLabs, ...
     [180 380],'hit');
+
+% stopped editing here because I was getting an obvious problem
 [baseline, first, third, final] = plotEyelidTraces_groupDataOK135478...
     (timeVector, eyelidpos.during.missmean, ...
     [3,3,3,3;4,4,4,4;5,5,5,5;6,6,6,6], legLabs, ...
