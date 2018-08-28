@@ -98,7 +98,7 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missuramp, plotData.after.missuramp, plotData.late.missuramp, plotData.early.missuramp, 'UR Amp (adjusted; Miss trials only)', [0.5 1.05], [0 19], 'mean');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hiturint, plotData.after.hiturint, plotData.late.hiturint, plotData.early.hiturint, 'UR Integral (adjusted; Hit trials only)', [0.03 0.5], [0 19], 'mean');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral (adjusted; Miss trials only)', [0.03 0.5], [0 19], 'mean');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral ', [0.03 0.5], [0 19], 'mean');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.urint, plotData.after.urint, plotData.late.urint, plotData.early.urint, 'UR Integral ', [0.03 0.5], [0 19], 'mean');
 
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.crprob, plotData.after.crprob, plotData.late.crprob, plotData.early.crprob, 'CR Probability', [0 1], [0 19], 'median');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.cradjamp, plotData.after.cradjamp, plotData.late.cradjamp, plotData.early.cradjamp, 'CR Amplitude (adjusted)', [0 0.6], [0 19], 'median');
@@ -108,7 +108,7 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missuramp, plotData.after.missuramp, plotData.late.missuramp, plotData.early.missuramp, 'UR Amp (adjusted; Miss trials only)', [0.5 1.05], [0 19], 'median');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.hiturint, plotData.after.hiturint, plotData.late.hiturint, plotData.early.hiturint, 'UR Integral (adjusted; Hit trials only)', [0.03 0.5], [0 19], 'median');
 [during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral (adjusted; Miss trials only)', [0.03 0.5], [0 19], 'median');
-[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.missurint, plotData.after.missurint, plotData.late.missurint, plotData.early.missurint, 'UR Integral ', [0.03 0.5], [0 19], 'median');
+[during, after, late, early]=plotExpVsCntPreAndManipulation(plotData.during.urint, plotData.after.urint, plotData.late.urint, plotData.early.urint, 'UR Integral ', [0.03 0.5], [0 19], 'median');
 
 
 %% organize and plot mean eyelid trace data
@@ -132,7 +132,7 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
     ylabelstring = 'FEC';
     [plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [1,2,3,4], ...
         [2,3,5,7,8;2,3,5,7,9;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
-        titlestring, xlabelstring, ylabelstring, 0);
+        titlestring, xlabelstring, ylabelstring);
 
     legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
     titlestring = 'control animals: during photostimulation';
@@ -140,7 +140,7 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
     ylabelstring = 'FEC';
     [plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [5,6,7,8,9], ...
         [2,3,5,7,12;2,3,5,7,12;2,3,5,7,12;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
-        titlestring, xlabelstring, ylabelstring, 0);
+        titlestring, xlabelstring, ylabelstring);
 
     % data adjusted to baseline each trial in getDayData
     legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
@@ -149,7 +149,7 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
     ylabelstring = 'FEC-baseline';
     [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.during.mean, [1,2,3,4], ...
         [2,3,5,7,8;2,3,5,7,9;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
-        titlestring, xlabelstring, ylabelstring, 0);
+        titlestring, xlabelstring, ylabelstring);
     ylim([-0.01 1])
 
     legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
@@ -158,139 +158,177 @@ plotExpVsCntPreAndManipulation(plotData.during.uramp, plotData.after.uramp, plot
     ylabelstring = 'FEC';
     [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.during.mean, [5,6,7,8,9], ...
         [2,3,5,7,12;2,3,5,7,12;2,3,5,7,12;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
-        titlestring, xlabelstring, ylabelstring, 0);
+        titlestring, xlabelstring, ylabelstring);
     ylim([-0.01 1])
     
-    % stopped here 180827
+
+% plot mean hit and miss eyelid traces from during manipulation for experimental animals
+    % baseline not adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
+    titlestring = 'experimental animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.during.hitmean, [1,2,3,4], ...
+        [2,3,5,7,8;2,3,5,7,9;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
     
-% mean eyelid traces from first, second, and third days after the during
-% manipulation
-legendLabels = {'last laser', 'reacq 1', 'reacq 2', 'reacq 3'};
-titlestring = 'experimental animals: during photostimulation';
-xlabelstring = 'time(s)';
-ylabelstring = 'FEC-baseline';
-[plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [1,2,3,4], ...
-    [8, 13, 14, 15;9, 13, 14, 15;12, 13, 14, 15;12, 13, 14, 15], timeVector, legendLabels,...
-    titlestring, xlabelstring, ylabelstring, 1);
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
+    titlestring = 'experimental animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.during.missmean, [1,2,3,4], ...
+        [2,3,5,7,8;2,3,5,7,9;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
+    % baseline adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
+    titlestring = 'experimental animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.during.hitmean, [1,2,3,4], ...
+        [2,3,5,7,8;2,3,5,7,9;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
+    
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'laser 5', 'last laser'};
+    titlestring = 'experimental animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.during.missmean, [1,2,3,4], ...
+        [2,3,5,7,8;2,3,5,7,9;2,3,5,7,12;2,3,5,7,12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
 
-legendLabels = {'baseline', 'laser 1', 'laser 2', 'laser 4', 'last laser'};
-titlestring = 'control animals: during photostimulation';
-xlabelstring = 'time(s)';
-ylabelstring = 'FEC';
-[plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [5,6,7,8,9], ...
-    [2,3,4,6,12;2,3,4,6,12;2,3,4,6,12;2,3,4,6,12;2,3,4,6,12], timeVector, legendLabels,...
-    titlestring, xlabelstring, ylabelstring, 1);
-
-%% plot mean hit and miss eyelid traces from first 4 days of during manipulation for experimental animals
-
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK135478...
-    (timeVector, eyelidpos.during.missmean, ...
-    [3,3,3,3;4,4,4,4;5,5,5,5;6,6,6,6], legLabs, ...
-    [180 380],'miss');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK159606148...
-    (timeVector, eyelidpos.during.hitmean, ...
-    [3,3,3,3,3;4,4,4,4,4;5,5,5,5,5;6,6,6,6,6], legLabs, ...
-    [180 380],'hit');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK159606148...
-    (timeVector, eyelidpos.during.missmean, ...
-    [3,3,3,3,3;4,4,4,4,4;5,5,5,5,5;6,6,6,6,6], legLabs, ...
-    [180 380],'miss');
-
-%% plot mean eyelid traces from first 4 days of during manipulation for experimental and control animals
-legLabs.one='first day during';
-legLabs.two='second day during';
-legLabs.three='third day during';
-legLabs.four='fourth day during';
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK135478_seb...
-    (timeVector, eyelidPos.during.mean, ...
-    [3,3,3,3;4,4,4,4;5,5,5,5;6,6,6,6], legLabs, ...
-    [180 380],'baseline,during');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK159606148_seb...
-    (timeVector, eyelidPos.during.mean, ...
-    [3,3,3,3,3;4,4,4,4,4;5,5,5,5,5;6,6,6,6,6], legLabs, ...
-    [180 380],'baseline,during');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK135478...
-    (timeVector, eyelidPos.during.mean, ...
-    [3,3,3,3;4,4,4,4;5,5,5,5;6,6,6,6], legLabs, ...
-    [180 380],'baseline,during');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK159606148...
-    (timeVector, eyelidPos.during.mean, ...
-    [3,3,3,3,3;4,4,4,4,4;5,5,5,5,5;6,6,6,6,6], legLabs, ...
-    [180 380],'baseline,during');
-
-
-%% plot mean eyelid traces from last day of baseline and then a number of days of the during manipulation
-legLabs.one='baseline';
-legLabs.two='first day during';
-legLabs.three='third day during';
-legLabs.four='last day during';
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK135478_seb...
-    (timeVector, eyelidPos.during.mean, ...
-    [2,2,2,2;3,3,3,3;5,5,5,5;8,11,12,12], legLabs, ...
-    [180 380],'baseline,during');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK159606148_seb...
-    (timeVector, eyelidPos.during.mean, ...
-    [2,2,2,2,2;3,3,3,3,3;5,5,5,5,5;8,11,12,12,12], legLabs, ...
-    [180 380],'baseline,during');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK135478...
-    (timeVector, eyelidPos.during.mean, ...
-    [2,2,2,2;3,3,3,3;5,5,5,5;8,11,12,12], legLabs, ...
-    [180 380],'baseline,during');
-[baseline, first, third, final] = plotEyelidTraces_groupDataOK159606148...
-    (timeVector, eyelidPos.during.mean, ...
-    [2,2,2,2,2;3,3,3,3,3;5,5,5,5,5;8,11,12,12,12], legLabs, ...
-    [180 380],'baseline,during');
 
 %% plot mean eyelid traces from last day of during manipulation and then a number of days of reacquisition
-legLabs.one='last day during';
-legLabs.two='first day reacq';
-legLabs.three='third day reacq';
-legLabs.four='last day reacq';
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478(timeVector, eyelidPos.during.mean, [8,11,12,12;13,13,13,13;15,15,15,15;18,18,18,18], legLabs, [180 380],'during,reacq');
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478_seb(timeVector, eyelidPos.during.mean, [8,11,12,12;13,13,13,13;15,15,15,15;18,18,18,18], legLabs, [180 380],'during,reacq');
+    % eyelidtrace not adjusted
+    legendLabels = {'last laser', 'reacq 1', 'reacq 3', 'reacq 5'};
+    titlestring = 'experimental animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [1,2,3,4], ...
+        [8, 13, 15, 16;9, 13, 15, 16;12, 13, 15, 16;12, 13, 15, 16], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
+    
+    legendLabels = {'last laser', 'reacq 1', 'reacq 2'};
+    titlestring = 'control animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.during.mean, [5,6,7,8,9], ...
+        [12, 13, 14;12, 13, 14;12, 13, NaN;12, 13, 14;12, 13, 14], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
 
+    % eyelidtrace baseline adjusted
+    legendLabels = {'last laser', 'reacq 1', 'reacq 3', 'reacq 5'};
+    titlestring = 'experimental animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.during.mean, [1,2,3,4], ...
+        [8, 13, 15, 16;9, 13, 15, 16;12, 13, 15, 16;12, 13, 15, 16], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
+    
+    legendLabels = {'last laser', 'reacq 1', 'reacq 2'};
+    titlestring = 'control animals: during photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.during.mean, [5,6,7,8,9], ...
+        [12, 13, 14;12, 13, 14;12, 13, NaN;12, 13, 14;12, 13, 14], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
 
 %% plot mean eyelid traces from last day of reacquition and then some days of late laser manipulation
-legLabs.one='last day reacq';
-legLabs.two='first day late';
-legLabs.three='third day late';
-legLabs.four='last day late';
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478(timeVector, eyelidPos.late.mean, [2,2,2,2;3,3,3,3;5,5,5,5;12,12,12,12], legLabs, [300 500],'reacq,late');
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478_seb(timeVector, eyelidPos.late.mean, [2,2,2,2;3,3,3,3;5,5,5,5;12,12,12,12], legLabs, [300 500],'reacq,late');
+    % eyelidtrace not adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'last laser'};
+    titlestring = 'experimental animals: late photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.late.mean, [1,2,3,4], ...
+        [2, 3, 5, 12;2, 3, 5, 12;2, 3, 5, 12;2, 3, 5, 12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
+    % eyelidtrace adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'last laser'};
+    titlestring = 'experimental animals: late photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.late.mean, [1,2,3,4], ...
+        [2, 3, 5, 12;2, 3, 5, 12;2, 3, 5, 12;2, 3, 5, 12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
+    
 
 %% plot mean eyelid traces from last day of reacquisition and then some days of after laser manipulation
-legLabs.one='last day reacq';
-legLabs.two='first day after';
-legLabs.three='third day after';
-legLabs.four='last day after';
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478(timeVector, eyelidPos.after.mean, [2,2,2,2;3,3,3,3;5,5,5,5;8,12,11,12], legLabs, [550 750],'reacq, after');
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478_seb(timeVector, eyelidPos.after.mean, [2,2,2,2;3,3,3,3;5,5,5,5;8,12,11,12], legLabs, [550 750],'reacq, after');
-
+    % eyelidtrace not adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'last laser'};
+    titlestring = 'experimental animals: after photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.after.mean, [1,2,3,4], ...
+        [2, 3, 5, 8;2, 3, 5, 12;2, 3, 5, 11;2, 3, 5, 12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
+    % eyelidtrace adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'last laser'};
+    titlestring = 'experimental animals: after photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.after.mean, [1,2,3,4], ...
+        [2, 3, 5, 8;2, 3, 5, 12;2, 3, 5, 11;2, 3, 5, 12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
+    
+    
 %% plot mean eyelid traces from last day of reacquisition and then some days of early laser manipulation
-legLabs.one='last day reacq';
-legLabs.two='first day early';
-legLabs.three='third day early';
-legLabs.four='last day early';
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478(timeVector, eyelidPos.early.mean, [2,2,2,2;3,3,3,3;5,5,5,5;12,10,12,12], legLabs, [0 200],'reacq, early');
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK159606148(timeVector, eyelidPos.early.mean, [2,2,2,2;3,3,3,3;5,5,5,5;12,10,12,12], legLabs, [0 200],'reacq, early');
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478_seb(timeVector, eyelidPos.early.mean, [2,2,2,2;3,3,3,3;5,5,5,5;12,10,12,12], legLabs, [0 200],'reacq, early');
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK159606148_seb(timeVector, eyelidPos.early.mean, [2,2,2,2;3,3,3,3;5,5,5,5;12,10,12,12], legLabs, [0 200],'reacq, early');
-
+    % eyelidtrace not adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'last laser'};
+    titlestring = 'experimental animals: early photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.early.mean, [1,2,3,4], ...
+        [2, 3, 5, 12;2, 3, 5, 10;2, 3, 5, 12;2, 3, 5, 12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
+    % eyelidtrace adjusted
+    legendLabels = {'baseline', 'laser 1', 'laser 3', 'last laser'};
+    titlestring = 'experimental animals: early photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.early.mean, [1,2,3,4], ...
+        [2, 3, 5, 12;2, 3, 5, 10;2, 3, 5, 12;2, 3, 5, 12], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
 
 %% plot mean eyelid traces from last day of early laser and then some days of reacquisition
-legLabs.one='last day early';
-legLabs.two='first day reacq';
-legLabs.three='third day reacq';
-legLabs.four='last day reacq';
-[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478(timeVector, eyelidPos.early.mean, [12,10,12,12;13,13,13,13;15,15,15,15;18,18,18,18], legLabs, [0 200],'early, reacq');
-%[baseline, first, third, final] =plotEyelidTraces_groupDataOK135478_seb(timeVector, eyelidPos.early.mean, [12,10,12,12;13,13,13,13;15,15,15,15;18,18,18,18], legLabs, [0 200],'early, reacq');
-
-
-
+% not working for some reason
+    % eyelidtrace not adjusted
+    legendLabels = {'last laser', 'reacq 1', 'reacq 3', 'last reacq'};
+    titlestring = 'experimental animals: early photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTrace.early.mean, [1,2,3,4], ...
+        [12, 13, 15, 18;10, 13, NaN, NaN;12, 13, 15, 17;12, 13, 15, 18], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    
+    % eyelidtrace adjusted
+    legendLabels = {'last laser', 'reacq 1', 'reacq 3', 'last reacq'};
+    titlestring = 'experimental animals: early photostimulation';
+    xlabelstring = 'time(s)';
+    ylabelstring = 'FEC-baseline';
+    [plottedTraces] = plotEyelidTraces(eyelidTraceAdj.early.mean, [1,2,3,4], ...
+        [12, 13, 15, 18;10, 13, NaN, NaN;12, 13, 15, 17;12, 13, 15, 18], timeVector, legendLabels,...
+        titlestring, xlabelstring, ylabelstring);
+    ylim([-0.01 1])
+  
+% stopped modifying code here 180828
 %% get data for the early laser + laser alone sessions
 cd('C:\olivia\data summaries')
 [num, txt, raw] = xlsread('ExptAndControl_earlyLasAnd10LasAlone.xlsx');
 [rows cols] = size(raw);
+
+
 eyelidPos.lasAlone.mean = nan(1,1600);
 eyelidPos.lasAlone.sem = nan(1,1600);
 eyelidPos.earlyOnTest.mean = nan(1,1600);
