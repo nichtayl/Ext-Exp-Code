@@ -60,20 +60,13 @@ for m = 1:mousenum
         urintadj = nan(length(pairedTrials),1);
         eyelidposadj = nan(length(pairedTrials),200);
         for i = 1:length(pairedTrials)
-            baseline(i,1) = mean(data.eyelidpos(pairedTrials(i), 1:39));
+            baseline(i,1) = data.baseline(pairedTrials(i), 1);
             cradjamp(i,1) = data.eyelidpos(pairedTrials(i), 76) - baseline(i,1);
             uramp(i,1) = max(data.eyelidpos(pairedTrials(i), 80:100)); % max FEC in the 100 ms after US triggered
             urampadj(i,1) = uramp(i,1)-baseline(i,1);
             urint(i,1) = trapz(timeVector(1,80:200), data.eyelidpos(pairedTrials(i), 80:200)); % area under the curve for the remainder of the trial after the US is triggered
             urintadj(i,1) = trapz(timeVector(1,80:200), data.eyelidpos(pairedTrials(i), 80:200)-baseline(i,1));
-            % if the eyelid moves more than 0.1 FEC from baseline, say that
-            % there was emough movement in baseline to throw the trial away
-            deflectionsDuringBaseline = abs(data.eyelidpos(pairedTrials(i), 1:39) - baseline(i,1));
-            if max(deflectionsDuringBaseline)>=0.1
-                stable(i,1)=0;
-            else
-                stable(i,1)=1;
-            end
+            stable(i,1) = data.baselineMvt(pairedTrials(i),1);
             eyelidposadj(i,1:200)=data.eyelidpos(pairedTrials(i),1:200)-baseline(i,1);
             astartleamp(i,1) = max(data.eyelidpos(pairedTrials(i), 40:50)) - baseline(i,1); % the max amplitude in the first 50 ms after the CS is presented
         end

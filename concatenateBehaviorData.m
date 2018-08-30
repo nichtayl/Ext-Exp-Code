@@ -19,6 +19,8 @@ mice(9,1).name='OK162';
 
 
 rbdat.eyelidpos = [];
+rbdat.baseline = [];
+rbdat.baselineMvt = [];
 rbdat.encoder_displacement = [];
 rbdat.c_isi = [];
 rbdat.c_csnum = [];
@@ -62,6 +64,20 @@ for m = 1:length(mice);
                 end
                 
                 rbdat.eyelidpos=[rbdat.eyelidpos;trials.eyelidpos];
+                
+                
+                baselines = nan(length(trials.c_csdur),1);
+                baselineMvt = zeros(length(trials.c_csdur),1);
+                for t = 1:length(trials)
+                    baselines(t,1)=mean(trials.eyelidpos(t,1:39));
+                    deviations = trials.eyelidpos(t,1:39)-baselines(t,1);
+                    if abs(max(deviations))>=0.1
+                        baselineMvt(t,1) = 1;
+                    end
+                end
+                
+                rbdat.baseline = [rbdat.baseline; baselines];
+                rbdat.baselineMvt = [rbdat.baselineMvt; baselineMvt];
                
                 if isfield(trials,'encoder_displacement')
                     rbdat.encoder_displacement = [rbdat.encoder_displacement;trials.encoder_displacement];
