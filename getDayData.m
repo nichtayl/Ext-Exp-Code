@@ -34,6 +34,8 @@ output.meanHitEyelidTraceAdj = [];
 output.semHitEyelidTraceAdj = [];
 output.meanMissEyelidTraceAdj = [];
 output.semMissEyelidTraceAdj = [];
+
+output.isext = [];
 for m = 1:mousenum
     daylist = unique(data.date(data.mouse==m,1));
     
@@ -60,13 +62,32 @@ for m = 1:mousenum
         urintadj = nan(length(pairedTrials),1);
         eyelidposadj = nan(length(pairedTrials),200);
         for i = 1:length(pairedTrials)
-            baseline(i,1) = data.baseline(pairedTrials(i), 1);
+            % added the if statements in this loop to deal with a discrepancy in my
+            % experiment dataset and the WT animal dataset, should fix at
+            % the source and then come back to clean up this line
+            % (although the code won't break if I forget about this)
+            if isfield(data, 'baseline')
+                baseline(i,1) = data.baseline(pairedTrials(i), 1);
+            else
+                baseline(i,1) = mean(data.eyelidpos(pairedTrials(i), 1:39));
+            end
             cradjamp(i,1) = data.eyelidpos(pairedTrials(i), 76) - baseline(i,1);
             uramp(i,1) = max(data.eyelidpos(pairedTrials(i), 80:100)); % max FEC in the 100 ms after US triggered
             urampadj(i,1) = uramp(i,1)-baseline(i,1);
             urint(i,1) = trapz(timeVector(1,80:200), data.eyelidpos(pairedTrials(i), 80:200)); % area under the curve for the remainder of the trial after the US is triggered
             urintadj(i,1) = trapz(timeVector(1,80:200), data.eyelidpos(pairedTrials(i), 80:200)-baseline(i,1));
-            stable(i,1) = data.baselineMvt(pairedTrials(i),1);
+            if isfield(data, 'baselineMvt')
+                stable(i,1) = data.baselineMvt(pairedTrials(i),1);
+            else
+                % define an unstable trial as one that has movement of >0.1
+                % FEC during the baseline
+                tempdiffs = abs(data.eyelidpos(pairedTrials(i),1:39)-baseline(i,1));
+                if max(tempdiffs)>0.1
+                    stable(i,1) = 0;
+                else
+                    stable(i,1) = 1;
+                end
+            end
             eyelidposadj(i,1:200)=data.eyelidpos(pairedTrials(i),1:200)-baseline(i,1);
             astartleamp(i,1) = max(data.eyelidpos(pairedTrials(i), 40:50)) - baseline(i,1); % the max amplitude in the first 50 ms after the CS is presented
         end
@@ -98,6 +119,22 @@ for m = 1:mousenum
         output.meanURIntegralAdj(end+1,1)=mean(urintadj(stable & baseline<0.3));
         output.meanHitURIntegralAdj(end+1,1)=mean(urintadj(stable & baseline<0.3 & cradjamp>=crcrit));
         output.meanMissURIntegralAdj(end+1,1)=mean(urintadj(stable & baseline<0.3 & cradjamp<crcrit));
+        
+        % what kind of session is this? (adding this in for the extinction
+        % dataset analysis)
+            % I also just noticed that the variable name 'pairedtrials' is
+            % misleading because after day 1 I do not require that the US
+            % and CS were both presented, I just require that neuroblinks
+            % saved them as trials of type 'Conditioning'
+        if data.c_usdur(pairedTrials(end-1),1)==0
+            % if the second to last trial had a US of 0 duration, then the session
+            % was definitely an extinction session. On day 1s there're some
+            % number of 0-USdur trials at the beginning of the session so I
+            % didn't want to include that as a possibility
+            output.isext(end+1,1)=1;
+        else
+            output.isext(end+1,1)=0;
+        end
         
         % eyelid trace stuff
         output.meanEyelidTrace(end+1, 1:200) = mean(data.eyelidpos(pairedTrials,:));

@@ -1,4 +1,4 @@
-%%% batch concatenate animals' performace across days
+%%% examine performance of experimental and control animals across days
 %%% assumes trialdata files have already been generated and that they have
 %%% been concatenated using concatenateBehaviorData.mat and
 %%% concatenateBehaviorData_headplateOnlyMice.mat
@@ -84,8 +84,9 @@ load('180821_WTExtExpt_allAnimBehData.mat')
 rbdatDayData = getDayData(rbdat, timeVector, [0.2; 0.1; 0.2; 0.1; 0.1; 0.1; 0.1; 0.1; 0.1]); 
 % NOTE: NEED TO RERUN THE EXTINCTION DATASET ON
 % concatenateBehaviorData_headplateOnlyMice so that there is a baseline
-% field in that dataset
-%extdatDayData = getDayData(extdat, timeVector, 0.1*ones(length(unique(extdat.mouse)),1));
+% field in that dataset. Changed getDayData to be able to accomodate the
+% difference but it is inefficient
+extdatDayData = getDayData(extdat, timeVector, 0.1*ones(length(unique(extdat.mouse)),1));
 
 
 %% load the days to plot
