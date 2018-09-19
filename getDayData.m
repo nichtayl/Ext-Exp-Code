@@ -9,6 +9,8 @@ output.missCRAdjAmp = [];
 output.CRProb = [];
 output.meanAStartleAmp = [];
 
+output.meanMvtLatency = [];
+
 output.meanURAmp = [];
 output.meanURIntegral = [];
 output.meanHitURAmp = [];
@@ -77,7 +79,7 @@ for m = 1:mousenum
             urint(i,1) = trapz(timeVector(1,80:200), data.eyelidpos(pairedTrials(i), 80:200)); % area under the curve for the remainder of the trial after the US is triggered
             urintadj(i,1) = trapz(timeVector(1,80:200), data.eyelidpos(pairedTrials(i), 80:200)-baseline(i,1));
             if isfield(data, 'baselineMvt')
-                stable(i,1) = data.baselineMvt(pairedTrials(i),1);
+                stable(i,1) = data.baselineMvt(pairedTrials(i),1)==0;
             else
                 % define an unstable trial as one that has movement of >0.1
                 % FEC during the baseline
@@ -112,6 +114,10 @@ for m = 1:mousenum
         output.meanHitURAmpAdj(end+1,1) = mean(urampadj(stable & baseline<0.3 & cradjamp>=0.1));
         output.meanMissURAmpAdj(end+1,1) = mean(urampadj(stable & baseline<0.3 & cradjamp<0.1));
         
+        % for now, arbitrarily saying that mvt latencies of less than 10 ms & greater than 230 ms are not allowed and indicate that there was some error in the latency computation process
+        tempdata = data.mvtlatency(pairedTrials);
+        temp = nanmean(tempdata(tempdata>0.01 & tempdata<0.23));
+        output.meanMvtLatency(end+1,1) = temp; 
         
         output.meanURIntegral(end+1,1)=mean(urint(stable & baseline<0.3));
         output.meanHitURIntegral(end+1,1)=mean(urint(stable & baseline<0.3 & cradjamp>=crcrit));
@@ -126,7 +132,7 @@ for m = 1:mousenum
             % misleading because after day 1 I do not require that the US
             % and CS were both presented, I just require that neuroblinks
             % saved them as trials of type 'Conditioning'
-        if data.c_usdur(pairedTrials(end-1),1)==0
+        if data.c_usdur(pairedTrials(end-5),1)==0
             % if the second to last trial had a US of 0 duration, then the session
             % was definitely an extinction session. On day 1s there're some
             % number of 0-USdur trials at the beginning of the session so I

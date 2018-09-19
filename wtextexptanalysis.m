@@ -12,8 +12,8 @@ clear all
 close all
 
 %% tell MATLAB whether I am working on the office desktop (ALBUS) or my laptop (OREK) so that it knows what directories to use
-%machine = 'ALBUS';
-machine = 'OREK';
+machine = 'ALBUS';
+%machine = 'OREK';
 
 %% establish directories and go to the one where I have the behavior data stored
 if strcmp(machine, 'ALBUS')
@@ -51,8 +51,8 @@ lightmice(9,1).name = 'S148'; % bring LED CS, unpaired extinction
 lightmice(9,1).name = 'S149'; % bring LED CS, unpaired extinction
 
 %% load behavior data
-load('180821_WTExtExpt_timeVector.mat')
-load('180821_WTExtExpt_allAnimBehData.mat')
+load('180919_WTExtExpt_timeVector.mat')
+load('180919_WTExtExpt_toneData.mat')
 
 extdatDayData = getDayData(extdat, timeVector, 0.1*ones(length(unique(extdat.mouse)),1));
 
@@ -91,6 +91,41 @@ twoScatter(acq3, ext3, 'OK007', 'mean startle amplitude', 'startle amplitude', {
 acq4 = extdatDayData.meanAStartleAmp(extdatDayData.mouse==4 & extdatDayData.isext==0);
 ext4 = extdatDayData.meanAStartleAmp(extdatDayData.mouse==4 & extdatDayData.isext==1);
 twoScatter(acq4, ext4, 'OK008', 'mean startle amplitude', 'startle amplitude', {'acq'; 'ext'})
+
+
+% plot the relationship between startle amplitude and mean CR amplitude
+% during the acquisition phase
+% there doesn't really seem to be a relationship here
+acq1CR = extdatDayData.meanCRAdjAmp(extdatDayData.mouse==1 & extdatDayData.isext==0);
+scatter(acq1CR, acq1)
+
+hold on
+acq2CR = extdatDayData.meanCRAdjAmp(extdatDayData.mouse==2 & extdatDayData.isext==0);
+scatter(acq2CR, acq2)
+
+acq3CR = extdatDayData.meanCRAdjAmp(extdatDayData.mouse==3 & extdatDayData.isext==0);
+scatter(acq3CR, acq3)
+
+acq4CR = extdatDayData.meanCRAdjAmp(extdatDayData.mouse==4 & extdatDayData.isext==0);
+scatter(acq4CR, acq4)
+
+hold off
+% try probability
+% there also doesn't seem to be a relationship here
+acq1CR = extdatDayData.CRProb(extdatDayData.mouse==1 & extdatDayData.isext==0);
+scatter(acq1CR, acq1)
+
+hold on
+acq2CR = extdatDayData.CRProb(extdatDayData.mouse==2 & extdatDayData.isext==0);
+scatter(acq2CR, acq2)
+
+acq3CR = extdatDayData.CRProb(extdatDayData.mouse==3 & extdatDayData.isext==0);
+scatter(acq3CR, acq3)
+
+acq4CR = extdatDayData.CRProb(extdatDayData.mouse==4 & extdatDayData.isext==0);
+scatter(acq4CR, acq4)
+
+
 
 % make histograms for each animal but include the last 4 days of
 % acquisition and the first 4 days of extinction
@@ -255,6 +290,20 @@ xlabel('mean startle amplitude')
 legend('acquisition/maintenance', 'extinction', 'location', 'NorthEast')
 title('OS008')
 
+%% How does the CR shift across days
+% qualitatively, I feel like the curve shifts from left to right
+% maybe could quantify it using the latency of the first movement after the
+% alpha startle, which seems to end at 50 ms
+% kind of seems like latency doesn't change in these mice from the cursory
+% plots
+plot(extdatDayData.meanMvtLatency(extdatDayData.mouse==1 & extdatDayData.isext==0))
+plot(extdatDayData.meanMvtLatency(extdatDayData.mouse==1 & extdatDayData.isext==1))
+
+plot(extdatDayData.meanMvtLatency(extdatDayData.mouse==2 & extdatDayData.isext==0))
+
+plot(extdatDayData.meanMvtLatency(extdatDayData.mouse==3 & extdatDayData.isext==0))
+
+plot(extdatDayData.meanMvtLatency(extdatDayData.mouse==4 & extdatDayData.isext==0))
 
 
 %% What happens to performance after the animals makes a CR & doesn't get puffed versus after the animal makes no CR and doesn't get puffed?

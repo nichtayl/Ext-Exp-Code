@@ -34,6 +34,7 @@ rbdat.date = [];
 rbdat.mouse = [];
 rbdat.laserDur = [];
 rbdat.laserDel = [];
+rbdat.mvtlatencies = [];
 
 for m = 1:length(mice);
     
@@ -68,16 +69,19 @@ for m = 1:length(mice);
                 
                 baselines = nan(length(trials.c_csdur),1);
                 baselineMvt = zeros(length(trials.c_csdur),1);
-                for t = 1:length(trials)
+                latencies = nan(length(trials.c_csdur),1);
+                for t = 1:length(trials.c_usdur)
                     baselines(t,1)=mean(trials.eyelidpos(t,1:39));
                     deviations = trials.eyelidpos(t,1:39)-baselines(t,1);
                     if abs(max(deviations))>=0.1
                         baselineMvt(t,1) = 1;
                     end
+                    latencies(t,1) = latencyIntersecOfSlopes(trials.eyelidpos(t,:), trials.tm(t,:), baselines(t,1));
                 end
                 
                 rbdat.baseline = [rbdat.baseline; baselines];
                 rbdat.baselineMvt = [rbdat.baselineMvt; baselineMvt];
+                rbdat.mvtlatency = [rbdat.mvtlatency; latencies]
                
                 if isfield(trials,'encoder_displacement')
                     rbdat.encoder_displacement = [rbdat.encoder_displacement;trials.encoder_displacement];
