@@ -34,7 +34,7 @@ rbdat.date = [];
 rbdat.mouse = [];
 rbdat.laserDur = [];
 rbdat.laserDel = [];
-rbdat.mvtlatencies = [];
+rbdat.mvtlatency = [];
 
 for m = 1:length(mice);
     
@@ -81,7 +81,7 @@ for m = 1:length(mice);
                 
                 rbdat.baseline = [rbdat.baseline; baselines];
                 rbdat.baselineMvt = [rbdat.baselineMvt; baselineMvt];
-                rbdat.mvtlatency = [rbdat.mvtlatency; latencies]
+                rbdat.mvtlatency = [rbdat.mvtlatency; latencies];
                
                 if isfield(trials,'encoder_displacement')
                     rbdat.encoder_displacement = [rbdat.encoder_displacement;trials.encoder_displacement];

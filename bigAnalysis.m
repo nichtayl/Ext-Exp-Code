@@ -62,9 +62,9 @@ lightmice(9,1).name = 'S148'; % bring LED CS, unpaired extinction
 lightmice(9,1).name = 'S149'; % bring LED CS, unpaired extinction
 
 %% load behavior data
-load('180830_DCNChR2ExtExpt_allAnimBehData.mat')
-load('180830_DCNChR2ExtExpt_timeVector.mat')
-load('180821_WTExtExpt_allAnimBehData.mat')
+load('180919_DCNChR2ExtExpt_allAnimBehData.mat')
+load('180919_DCNChR2ExtExpt_timeVector.mat')
+load('180919_WTExtExpt_toneData.mat')
 
 %% turn the trial data into useful data
 %%% Things that I will need for the ultimate data analysis:
@@ -94,7 +94,7 @@ extdatDayData = getDayData(extdat, timeVector, 0.1*ones(length(unique(extdat.mou
 % dates for a mouse's manipulation/pre-manipulation days. When the mouse
 % had less than 10 days of the manipulation, there is a NaN. The headers in
 % the file note which mouse/manipulation type there is.
-cd('C:\olivia\data summaries')
+cd('C:\olivia\data\data summaries\IO inhibition extinction project\spreadsheets')
 [num, txt, raw] = xlsread('ExperimentalAndControl.xlsx');
 
 
