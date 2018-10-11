@@ -7,11 +7,15 @@ function [SS_times, CSpk_times] = makeRecMatFiles_ShogoRig(thisFile, sscodes, cs
 SS_idx = [];
 CSpk_idx = [];
 
+SS_times = [];
+CSpk_times = [];
+
 tdtTrials.LAmp= [];
 tdtTrials.LDur = [];
 tdtTrials.UDur = [];
 tdtTrials.LTime = [];
 tdtTrials.UTime = [];
+tdtTrials.trltime = [];
 
 for f = 1:length(thisFile)
     %% load file
@@ -31,8 +35,9 @@ for f = 1:length(thisFile)
             SS_idx = [SS_idx; find(nw_17.codes(:,1) == sscspkcodes(idx))];
         end
     end
-    SS_times = nw_17.times(SS_idx, 1);
-    SS_times = sort(SS_times);
+    temp = nw_17.times(SS_idx, 1);
+    temp = sort(temp);
+    SS_times = [SS_times; temp];
     
     %% get CSpk times
     % normally triggered CSpks
@@ -40,8 +45,9 @@ for f = 1:length(thisFile)
     for idx = 1:length(cspkcodes)
         CSpk_idx = [CSpk_idx; find(nw_17.codes(:,1) == cspkcodes(idx))];
     end
-    CSpk_times = nw_17.times(CSpk_idx, 1);
-    CSpk_times = sort(CSpk_times);
+    temp = nw_17.times(CSpk_idx, 1);
+    temp = sort(temp);
+    CSpk_times = [CSpk_times; temp];
     
     % badly triggered CSpks
     oddCSpk_idx = [];
@@ -135,7 +141,14 @@ for f = 1:length(thisFile)
         udurtemp(length(TrlN.times),1) = str2double(UDur.text(UDur.times>=TrlN.times(end),:));
         ltimetemp(length(TrlN.times),1) = UDur.times(UDur.times>=TrlN.times(end),:);
         utimetemp(length(TrlN.times),1) = UDur.times(UDur.times>=TrlN.times(end),:);
-
+        
+        
+        tdtTrials.LAmp = [tdtTrials.LAmp; lamptemp];
+        tdtTrials.LDur = [tdtTrials.LDur; ldurtemp];
+        tdtTrials.UDur = [tdtTrials.UDur; udurtemp];
+        tdtTrials.LTime = [tdtTrials.LTime; ltimetemp];
+        tdtTrials.UTime = [tdtTrials.UTime; utimetemp];
+        tdtTrials.trltime = [tdtTrials.trltime; TrlN.times];
     end
 end
 
@@ -150,7 +163,7 @@ save(filename, 'CSpk_times') % includes poorly sorted spikes
 %% write behavior data MAT files
 filename = strcat(filenamebeg, 'trialInfo.mat');
 headers = {'Trial onset', 'Laser Dur', 'Laser Amp', 'Laser Onset', 'Puff Onset', 'Puff Dur'};
-data = [TrlN.times, tdtTrials.LDur, tdtTrials.LAmp, tdtTrials.LTime, tdtTrials.UTime, tdtTrials.UDur];
+data = [tdtTrials.trltime, tdtTrials.LDur, tdtTrials.LAmp, tdtTrials.LTime, tdtTrials.UTime, tdtTrials.UDur];
 datacells = num2cell(data);
 writeme = [headers; datacells];
 save(filename, 'writeme')

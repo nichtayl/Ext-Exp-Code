@@ -79,7 +79,7 @@ if ~isempty(badCSpkCodes)
         datacell = num2cell(data);
         writeme = [headers; datacell];
         filename = strcat(filenamebeg, 'oddCSpkTimes.xlsx');
-        %xlswrite(filename, writeme)
+        xlswrite(filename, writeme)
         close all
     else
         filename = strcat(cd, '\', filenamebeg, oddcspktimefileending);
