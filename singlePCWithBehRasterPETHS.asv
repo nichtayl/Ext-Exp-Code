@@ -4,7 +4,7 @@ function singlePCWithBehRasterPETHS(filebeg, puffDurs, laserAmps)
 
 % electrophysiology info (recall that spikes only sorted in the -0.2 s
 % before trial onset and 1 s after trial onset)
-load(strcat(filebeg,'SSts.mat')); % bl means bad laser attenuation setting these trials
+load(strcat(filebeg,'SSts.mat')); 
 load(strcat(filebeg,'CSpkts.mat'));
 
 % behavior info from TDT file
@@ -23,14 +23,35 @@ clear writeme
 % behavior info from matlab file
 load('trialdata.mat')
 
+% get list of bad trials, if exists
+tempVector = [1:length(trialTs)];
+goodTrials = [];
+files = dir('*badTrials*');
+if ~isempty(files)
+    tempstr = strcat(filebeg, 'badTrials.mat');
+    load(tempstr)
+    badTrials = sort(badTrials);
+    
+    for t = 1:length(tempVector)
+        if ~ismember(tempVector(t), badTrials)
+            goodTrials = [goodTrials; tempVector(t)];
+        end
+    end
+else
+    badTrials = NaN;
+    goodTrials = tempVector';
+end
+
+
 %% figure out the CSpk rate during the 200 ms before and 200 ms after starting a trial since this is what's been sorted and what comes before any stimuli are presented
 % also pull CSpk and SS times during trials so can make proper SS PETHs
 % centered on CSpks
-[preTrial_SS, preTrial_CSpk, totalTime] = getPreTrialSpikes(trialTs, 0.4, SS_times, CSpk_times);
+[preTrial_SS, preTrial_CSpk, totalTime] = getPreTrialSpikes(trialTs(goodTrials), 0.4, SS_times, CSpk_times);
 
 
 %% make a SS centered on CSpk histogram
 % needs to be focused on sorted parts
+colordef black
 rasterPETH_frequency(preTrial_SS, preTrial_CSpk, 0.050,-0.05:0.001:0.05) % not sure if this function is right
 xlabel('time from CSpk')
 ylabel('count/(bin duration*number of trials)')
@@ -38,8 +59,9 @@ hold on
 plot([0 0], [0 150])
 ylim([0 150])
 title('SS centered on CSpk')
-saveas(gcf, strcat(filebeg, 'SSonCSpkPSTH.m'))
+saveas(gcf, strcat(filebeg, 'SSonCSpkPSTH.fig'))
 close all
+
 
 
 %% calibrate MATLAB eyelid trace based on the minimum eyelid position during the 200 ms baseline on
@@ -70,461 +92,93 @@ for i = 1:m
     end
 end
 
+% get arrays to match up
+relevantPuffTimes = puffOn(goodTrials);
+relevantLaserTimes = laserOn(goodTrials);
+relevantPuffDurs = puffDur(goodTrials);
+relevantLaserDurs = laserDur(goodTrials);
+relevantLaserAmps = laserAmp(goodTrials);
+
+% set binedges
+binedges = -0.3:0.01:0.3;
+
+% set rig-specific parameters
+tubingDelay = 0.01;
+
+% pulll subsets of trials and make plots
 for i = 1:length(puffDurs)
     for m = 1:length(laserAmps)
-        USOnly.times = puffOn(puffDur==puffDurs(i) & isnan(laserDur));
-        laserOnly.times = laserOn(laserDur>0 & puffDur==0);
-        USAndLaser.UTimes = puffOn(puffDur==puffDurs(i) & laserDur>0 & laserAmp == laserAmps(m));
-        USAndLaser.LTimes = laserOn(puffDur==puffDurs(i) & laserDur>0 & laserAmp == laserAmps(m));
+        USOnly.times = relevantPuffTimes(relevantPuffDurs==puffDurs(i) &...
+            isnan(relevantLaserDurs));
+        laserOnly.times = relevantLaserTimes(relevantLaserDurs>0 & ...
+            relevantPuffDurs==0 & relevantLaserAmps == laserAmps(m));
+        USAndLaser.UTimes = relevantPuffTimes(relevantPuffDurs==puffDurs(i) & ...
+            relevantLaserDurs>0 & relevantLaserAmps == laserAmps(m));
+        USAndLaser.LTimes = relevantLaserTimes(relevantPuffDurs==puffDurs(i) & ...
+            relevantLaserDurs>0 & relevantLaserAmps == laserAmps(m));
         behwithlaserOnly = filesThisSess & trials.c_csdur>0 & trials.c_csnum == 8 ...
             & trials.laser.amp==laserAmps(m) & trials.c_usdur == 0;
-        behwithpuffOnly = filesThisSess & trials.c_usdur==puffDurs(i) & trials.c_csdur==0;
+        behwithpuffOnly = filesThisSess & trials.c_usdur==puffDurs(i) & ...
+            trials.c_csdur==0;
         behwithlaserandpuff = filesThisSess & trials.c_usdur==puffDurs(i) &...
             trials.c_csdur>0 & trials.c_csnum==8 & trials.laser.amp==laserAmps(m);
         
-        % CSpk on puff alone trials
-        rasterPETHBeh_choseY(CSpk_times, USOnly.times+0.01, 0.3, -0.3:0.01:0.3, ...
-            trials.tm(1,:),...
-            mean(trials.eyelidpos(behwithpuffOnly,:)),...
-            'counts/trials', -0.2, NaN, NaN, 1)
-        subplot(3, 1, 1)
-        titlestring = strcat('CSpk to puff:', num2str(puffDurs(i)), 'ms');
-        title(titlestring)
-        saveas(gcf, strcat(filebeg, 'CSpkTo', num2str(puffDurs(i)), 'msPuff.m'))
-        close gcf
+        if ~isempty(USAndLaser.UTimes) % in case a laser intensity has no puffs or a puff intensity has no laser presentations
+            isi = USAndLaser.UTimes(1) - USAndLaser.LTimes(1);
+            
+            % SS and CSpk on puff + laser trials
+            rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
+                USAndLaser.UTimes+tubingDelay, 0.3, binedges,...
+                trials.tm(1,:)-(isi + tubingDelay),... % remember to subtract some time to align puff at 0
+                mean(trials.eyelidpos(behwithlaserandpuff,:)),...
+                'frequency', 'probability', -0.2, ...
+                -1*(isi + tubingDelay), 0.2, 1)
+            set(gcf, 'Position', [100 400 400 500])
+            subplot(3, 1, 1)
+            titlestring = strcat('SS & CSpk to puff:', num2str(puffDurs(i)), ...
+                'ms with laser:', num2str(laserAmps(m)), 'mW');
+            title(titlestring)
+            saveas(gcf, strcat(filebeg, 'SSCSpkTo', num2str(puffDurs(i)), 'msPuffAnd',...
+                num2str(laserAmps(m)), 'mWLaser.fig'))
+            close gcf
+            
+        end
         
-        % CSpk on puff + laser trials
-        rasterPETHBeh_choseY(CSpk_times, USAndLaser.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-            trials.tm(1,:),...
-            mean(trials.eyelidpos(behwithpuffOnly,:)),...
-            'counts/trials', -0.2, -0.04, 0.2, 1)
-        subplot(3, 1, 1)
-        titlestring = strcat('CSpk to puff:', num2str(puffDurs(i)), ...
-            'ms with laser:', num2str(laserAmps(m)), 'mW');
-        title(titlestring)
-        saveas(gcf, strcat(filebeg, 'CSpkTo', num2str(puffDurs(i)), 'msPuffAnd',...
-            num2str(laserAmps(m)), 'mWLaser.m'))
-        close gcf
+        if i == 1 % only need to plot the laser alone trials during the first iteration of the outer loop
+            
+            % SS and CSpk on laser alone trials
+            rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
+                laserOnly.times, 0.3, binedges,...
+                trials.tm(1,:), mean(trials.eyelidpos(behwithlaserOnly,:)),...
+                'frequency', 'probability', -0.2, ...
+                0, 0.2, 0)
+            set(gcf, 'Position', [100 400 400 500])
+            subplot(3, 1, 1)
+            titlestring = strcat('SS & CSpk to laser:', num2str(laserAmps(m)), 'mW');
+            title(titlestring)
+            saveas(gcf, strcat(filebeg, 'SSCSpkTo', num2str(laserAmps(m)), ...
+                'mWLaser.fig'))
+            close gcf
+            
+        end
         
-        % CSpk on laser alone trials
-        rasterPETHBeh_choseY(CSpk_times, laserOnly.times+0.01, 0.3, -0.3:0.01:0.3, ...
-            trials.tm(1,:),...
-            mean(trials.eyelidpos(behwithpuffOnly,:)),...
-            'counts/trials', -0.2, 0, 0.2, 0)
-        subplot(3, 1, 1)
-        titlestring = strcat('CSpk to laser:', num2str(laserAmps(m)), 'mW');
-        title(titlestring)
-        saveas(gcf, strcat(filebeg, 'CSpkTo', num2str(laserAmps(m)), 'mWLaser.m'))
-        close gcf
-        
-        % SS on puff alone trials
-        rasterPETHBeh_choseY(SS_times, USOnly.times+0.01, 0.3, -0.3:0.01:0.3, ...
-            trials.tm(1,:),...
-            mean(trials.eyelidpos(behwithpuffOnly,:)),...
-            'counts/trials', -0.2, NaN, NaN, 1)
-        subplot(3, 1, 1)
-        titlestring = strcat('SS to puff:', num2str(puffDurs(i)), 'ms');
-        title(titlestring)
-        saveas(gcf, strcat(filebeg, 'SSTo', num2str(puffDurs(i)), 'msPuff.m'))
-        close gcf
-        
-        % SS on puff + laser trials
-        rasterPETHBeh_choseY(CSpk_times, USAndLaser.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-            trials.tm(1,:),...
-            mean(trials.eyelidpos(behwithpuffOnly,:)),...
-            'counts/trials', -0.2, -0.04, 0.2, 1)
-        subplot(3, 1, 1)
-        titlestring = strcat('CSpk to puff:', num2str(puffDurs(i)), ...
-            'ms with laser:', num2str(laserAmps(m)), 'mW');
-        title(titlestring)
-        saveas(gcf, strcat(filebeg, 'CSpkTo', num2str(puffDurs(i)), 'msPuffAnd',...
-            num2str(laserAmps(m)), 'mWLaser.m'))
-        close gcf
-        
-        % SS on laser alone trials
-        rasterPETHBeh_choseY(CSpk_times, laserOnly.times+0.01, 0.3, -0.3:0.01:0.3, ...
-            trials.tm(1,:),...
-            mean(trials.eyelidpos(behwithpuffOnly,:)),...
-            'counts/trials', -0.2, 0, 0.2, 0)
-        subplot(3, 1, 1)
-        titlestring = strcat('CSpk to laser:', num2str(laserAmps(m)), 'mW');
-        title(titlestring)
-        saveas(gcf, strcat(filebeg, 'CSpkTo', num2str(laserAmps(m)), 'mWLaser.m'))
-        close gcf
+        if m == 1 % only need to do the puff only for the first laser duration
+            
+            % SS and CSpk on puff alone trials
+            rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
+                USOnly.times+tubingDelay, 0.3, binedges,...
+                trials.tm(1,:), mean(trials.eyelidpos(behwithpuffOnly,:)),...
+                'frequency', 'probability', -0.2, ...
+                NaN, NaN, 1)
+            set(gcf, 'Position', [100 400 400 500])
+            subplot(3, 1, 1)
+            titlestring = strcat('SS & CSpk to puff:', num2str(puffDurs(i)), 'ms');
+            title(titlestring)
+            saveas(gcf, strcat(filebeg, 'SSCSpkTo', num2str(puffDurs(i)), 'msPuff.fig'))
+            close gcf
+            
+        end
         
     end
 end
-
-
-
-
-%% make raster PETHs with mean eyelid trace
-% CSpk on weak puff alone trials
-rasterPETHBeh_choseY(CSpk_times, USOnly.times+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withShortPuff & ~withLongPuff & ~withLaser,:)),...
-    'counts/trials', -0.2, NaN, NaN, 1)
-subplot(3, 1, 1)
-title('CSpk to 5 ms puff')
-
-% CSpk on weak puff + laser trials
-rasterPETHBeh_choseY(CSpk_times, USAndLaser.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withShortPuff & ~withLongPuff & withLaser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('CSpk to 5 ms puff + 45 mW laser')
-
-% CSpk on strong puff alone trials
-rasterPETHBeh_choseY(CSpk_times, USOnly20.times+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(~withShortPuff & withLongPuff & ~withLaser,:)),...
-    'counts/trials', -0.2, NaN, NaN, 1)
-subplot(3, 1, 1)
-title('CSpk to 20 ms puff')
-
-% CSpk on strong puff + laser trials
-rasterPETHBeh_choseY(CSpk_times, USAndLaser20.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(~withShortPuff & withLongPuff & withLaser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('CSpk to 20 ms puff + 45 mW laser')
-
-% CSpk on laser trials
-rasterPETHBeh_choseY(CSpk_times, laserOnly.times, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(~withShortPuff & ~withLongPuff & withLaser,:)),...
-    'counts/trials', -0.2, 0, 0.2, 0)
-subplot(3, 1, 1)
-title('CSpk to 45 mW laser')
-
-% SS on weak puff alone trials
-rasterPETHBeh_choseY(SS_times, USOnly.times+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withShortPuff & ~withLongPuff & ~withLaser,:)),...
-    'counts/trials', -0.2, NaN, NaN, 1)
-subplot(3, 1, 1)
-title('SS to 5 ms puff')
-
-% SS on weak puff + laser trials
-rasterPETHBeh_choseY(SS_times, USAndLaser.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withShortPuff & ~withLongPuff & withLaser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('SS to 5 ms puff + 45 mW laser')
-
-% SS on strong puff alone trials
-rasterPETHBeh_choseY(SS_times, USOnly20.times+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(~withShortPuff & withLongPuff & ~withLaser,:)),...
-    'counts/trials', -0.2, NaN, NaN, 1)
-subplot(3, 1, 1)
-title('SS to 20 ms puff')
-
-% SS on strong puff + laser trials
-rasterPETHBeh_choseY(SS_times, USAndLaser20.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(~withShortPuff & withLongPuff & withLaser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('SS to 20 ms puff + 45 mW laser')
-
-% SS on laser trials
-rasterPETHBeh_choseY(SS_times, laserOnly.times, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(~withShortPuff & ~withLongPuff & withLaser,:)),...
-    'counts/trials', -0.2, 0, 0.2, 0)
-subplot(3, 1, 1)
-title('SS to 45 mW laser')
-
-%% behavior data stuff
-% % compare means
-% figure
-% plot(trials.tm(1,:),mean(trials.eyelidpos(filesThisSess & withLaser & withShortPuff & ~withLongPuff,:)))
-% hold on
-% plot(trials.tm(1,:),mean(trials.eyelidpos(filesThisSess & withLaser & ~withShortPuff & withLongPuff,:)))
-% plot(trials.tm(1,:),mean(trials.eyelidpos(filesThisSess & withLaser & ~withShortPuff & ~withLongPuff,:)))
-% xlim([-0.05 0.05])
-% ylim([-0.2 1])
-% plot([0 0], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% plot([0.04 0.04], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% legend('laser + short puff', 'laser + long puff', 'laser alone', 'Location', 'SouthEast')
-% 
-% xlim([-0.1 0.5])
-% 
-% % compare means, excluding the bunch of laser alone trials that didn't have
-% % intervening puffs in case there was extinction
-% temp = [1:length(withLaser)]';
-% ofInterest = temp < 128;
-% figure
-% plot(trials.tm(1,:),mean(trials.eyelidpos(ofInterest & filesThisSess & withLaser & withShortPuff & ~withLongPuff,:)))
-% hold on
-% plot(trials.tm(1,:),mean(trials.eyelidpos(ofInterest & filesThisSess & withLaser & ~withShortPuff & withLongPuff,:)))
-% plot(trials.tm(1,:),mean(trials.eyelidpos(ofInterest & filesThisSess & withLaser & ~withShortPuff & ~withLongPuff,:)))
-% xlim([-0.05 0.05])
-% ylim([-0.2 1])
-% plot([0 0], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% plot([0.04 0.04], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% legend('laser + short puff', 'laser + long puff', 'laser alone', 'Location', 'SouthEast')
-% 
-% % compare mean response to laser alone trials depending on whether there are intervening puff trials of different lenghts
-% temp = [1:length(withLaser)]';
-% duringShortPuff = temp < 67;
-% duringLongPuff = temp >= 67 & temp<=128;
-% noInterveningPuffs = temp>128;
-% figure
-% plot(trials.tm(1,:),mean(trials.eyelidpos(duringShortPuff & filesThisSess & withLaser & ~withShortPuff & ~withLongPuff,:)))
-% hold on
-% plot(trials.tm(1,:),mean(trials.eyelidpos(duringLongPuff & filesThisSess & withLaser & ~withShortPuff & ~withLongPuff,:)))
-% plot(trials.tm(1,:),mean(trials.eyelidpos(noInterveningPuffs & filesThisSess & withLaser & ~withShortPuff & ~withLongPuff,:)))
-% xlim([-0.05 0.05])
-% ylim([-0.2 1])
-% plot([0 0], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% plot([0.04 0.04], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% legend('laser during short puffs', 'laser during long puffs', 'no intervening puffs', 'Location', 'SouthEast')
-% 
-% % compare mean response to laser alone trials depending on whether there are intervening puff trials of different lenghts
-% figure
-% plot(trials.tm(1,:),mean(trials.eyelidpos(ofInterest & filesThisSess & ~withLaser & withShortPuff & ~withLongPuff,:)))
-% hold on
-% plot(trials.tm(1,:),mean(trials.eyelidpos(ofInterest & filesThisSess & ~withLaser & ~withShortPuff & withLongPuff,:)))
-% xlim([-0.05 0.05])
-% ylim([-0.2 1])
-% plot([0 0], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% plot([0.04 0.04], [-0.2 1], 'Color', [0 0 0], 'LineStyle', ':')
-% legend('short puffs', 'long puffs', 'Location', 'SouthEast')
-
-%% now check the data for the weaker laser trials from the same day, clean up workspace first
-clear -except minmin maxmax
-
-%% load second file
-thisFile = 'OK168_181004_01c_sortedAroundTrials.mat';
-load(thisFile)
-
-
-%% wavemark code identities the same as above file
-
-SS_idx = nw_17.codes(:,1)== 1 | nw_17.codes(:,1)==9 | nw_17.codes(:,1)==4 | ...
-    nw_17.codes(:,1)==5;
-SS_times = nw_17.times(SS_idx,1);
-
-CSpk_idx = nw_17.codes(:,1)== 2 | nw_17.codes(:,1)==6;
-CSpk_times = nw_17.times(CSpk_idx,1);
-
-% need to pull out the CSpk times for code 7 and 8, not worried so much
-% about SS for today 181008, so sorry future person who might care about
-% this
-
-%% did this part to manually get the CSpk times
-% oddCSpk_idx = nw_17.codes(:,1)==5;
-% oddCSpk_times = nw_17.times(oddCSpk_idx,1);
-% 
-% waveformStartIndices = nan(length(oddCSpk_times),1);
-% for i = 1:length(oddCSpk_times)
-%     waveformStartIndices(i,1)=find(Spk2_01.times==oddCSpk_times(i,1));
-% end
-% 
-% % want to look at 8 ms after the waveform start
-% 
-% figure
-% for i = 1:length(waveformStartIndices)
-%     plot(Spk2_01.times(waveformStartIndices(i):waveformStartIndices(i)+192,1),...
-%         Spk2_01.values(waveformStartIndices(i):waveformStartIndices(i)+192,1))
-%     title(num2str(i))
-%     pause
-% end
-
-
-%% load xls sheet that I put the times for the code 6 spikes in
-spreadsheet = xlsread('C:\olivia\data\ephys\OK168\181004\OK168_181004_01b_oddCSpkTimes.xlsx');
-CSpktime = spreadsheet(:,2); % I put the times in column 2 and the indices from oddCSpk_times into column 1
-
-%% integrate the data into the existing CSpk time list
-CSpk_times = [CSpk_times;CSpktime];
-CSpk_times = sort(CSpk_times);
-
-% %% plot the CSpk waveforms THIS IS INCLUDING ALL SHOULD JUST PUT AFTER
-% THE SORTING CHECK SECTION BELOW
-% spikebinwidth = Spk2_01.times(2)-Spk2_01.times(1);
-% waveformStartIndices = nan(length(CSpk_times),1);
-% for i = 1:length(CSpk_times)
-%     try
-%         waveformStartIndices(i,1)=find(Spk2_01.times==CSpk_times(i,1)); % using the absolute value and the subtraction so that the script will tolerate the manually timestamped spikes
-%     catch ME
-%         display('CSpk skipped because no time bin is identical to timestamp')
-%     end
-% end
-% 
-% % want to look at 8 ms after the waveform start
-% 
-% figure
-% hold on
-% for i = 1:length(waveformStartIndices)
-%     if ~isnan(waveformStartIndices(i,1))
-%         plot(Spk2_01.values(waveformStartIndices(i):waveformStartIndices(i)+192,1))
-%     end
-% end
-
-
-%% figure out the CSpk rate during the 200 ms before and 200 ms after starting a trial since this is what's been sorted and what comes before any stimuli are presented
-% also pull CSpk and SS times during trials so can make proper SS PETHs
-% centered on CSpks
-winStart = trialTs-0.2;
-winEnd = trialTs+0.2;
-totalTime = 0.4*length(winStart);
-count_CSpk = 0;
-preTrial_CSpk = [];
-preTrial_SS = [];
-for i = 1:length(winStart)
-    temp = CSpk_times>=winStart(i) & CSpk_times<winEnd(i);
-    count_CSpk = count_CSpk + sum(temp);
-    
-    preTrial_CSpk = [preTrial_CSpk;CSpk_times(temp)];
-    
-    temp = SS_times>=winStart(i) & SS_times<winEnd(i);
-    preTrial_SS = [preTrial_SS; SS_times(temp)];
-end
-baselinerate_CSpk = count_CSpk/totalTime;
-
-%% make a SS centered on CSpk histogram
-% needs to be focused on sorted parts
-rasterPETH_frequency(preTrial_SS, preTrial_CSpk, 0.050,-0.05:0.001:0.05)
-xlabel('time from CSpk')
-ylabel('frequency')
-hold on
-plot([0 0], [0 250])
-ylim([0 250])
-title('SS centered on CSpk')
-
-%% get TDT behavior data (timestamps)
-% need to figure out which trials had laser, which trials had puff, which
-% trials had laser and puff
-
-% maybe the best thing would be to go through TrlN and just figure out what
-% events go with what trials
-laserDur=nan(length(trialTs),1);
-laserAmp=nan(length(trialTs),1);
-puffDur=nan(length(trialTs),1);
-laserOn=nan(length(trialTs),1);
-puffOn=nan(length(trialTs),1);
-for i = 1:length(trialTs)-1
-    laserAmp(i,1) = str2double(laserAmp(laserOn>=trialTs(i) & laserOn<=trialTs(i+1),:));
-    laserDur(i,1) = str2double(laserDur(laserOn>=trialTs(i) & laserOn<=trialTs(i+1),:));
-    puffDur(i,1) = str2double(puffDur(puffOn>=trialTs(i) & puffOn<=trialTs(i+1),:));
-    
-    temp = laserOn(laserOn>=trialTs(i) & laserOn<=trialTs(i+1),:);
-    if ~isempty(temp)
-        laserOn(i,1) = temp;
-    end
-    temp = puffOn(puffOn>=trialTs(i) & puffOn<=trialTs(i+1),:);
-    if ~isempty(temp)
-        puffOn(i,1) = temp;
-    end
-end
-laserAmp(length(trialTs),1) = str2double(laserAmp(laserOn>=trialTs(end),:));
-laserDur(length(trialTs),1) = str2double(laserDur(laserOn>=trialTs(end),:));
-puffDur(length(trialTs),1) = str2double(puffDur(puffOn>=trialTs(end),:));
-laserOn(length(trialTs),1) = puffOn(puffOn>=trialTs(end),:);
-puffOn(length(trialTs),1) = puffOn(puffOn>=trialTs(end),:);
-
-% only 20 ms puff this file
-USOnly20.times = puffOn(puffDur==20 & isnan(laserDur));
-USAnd30Laser20.UTimes = puffOn(puffDur==20 & laserAmp==30 & laserDur>0);
-USAnd15Laser20.UTimes = puffOn(puffDur==20 & laserAmp==15 & laserDur>0);
-laserOnly15.times = laserOn(puffDur==20 & laserAmp==15 & laserDur>0);
-laserOnly30.times = laserOn(puffDur==20 & laserAmp==15 & laserDur>0);
-
-%% get MATLAB data (eyelid traces) & indices
-load('trialdata.mat')
-thisSession = thisFile(14:16);
-[m,n] = size(trials.filename);
-filesThisSess = [];
-for i = 1:m
-    if isempty(cell2mat(strfind(trials.filename(i,1),thisSession)))
-        filesThisSess(i,1)=0;
-    else
-        filesThisSess(i,1)=1;
-    end
-end
-with30Laser = trials.laser.amp==30 & filesThisSess; % all trials have laser, otherwise would have needed to add a csduration check
-with15Laser = trials.laser.amp==15 & filesThisSess; % all trials have laser, otherwise would have needed to add a csduration check
-withLongPuff = trials.c_usdur==20 & filesThisSess; % only long puffs this file
-
-
-% calibrate eyelid trace based on the minimum eyelid position during the 200 ms baseline on
-% & the maximum eyelid position after a puff
-% [minvals] = min(trials.eyelidpos(:, 1:39));
-% [minmin] = min(minvals);
-% 
-% [maxvals] = max(trials.eyelidpos(withLongPuff==1, 52:58)); % no puff alone trials this file, can go back and use same calibration as other mouse I guess...probably should
-% [maxmax] = max(maxvals); 
-
-if minmin<0
-    trials.eyelidpos = (trials.eyelidpos - minmin)/(maxmax - minmin);
-else
-    trials.eyelidpos = trials.eyelidpos/maxmax;
-end
-
-%% make raster PETHs with mean eyelid trace
-% CSpk on strong puff + laser trials
-rasterPETHBeh_choseY(CSpk_times, USAnd30Laser20.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with30Laser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('CSpk to 20 ms puff + 30 mW laser')
-
-rasterPETHBeh_choseY(CSpk_times, USAnd15Laser20.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with15Laser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('CSpk to 20 ms puff + 15 mW laser')
-
-% CSpk on laser trials
-rasterPETHBeh_choseY(CSpk_times, laserOnly30.times, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with30Laser,:)),...
-    'counts/trials', -0.2, 0, 0.2, 0)
-subplot(3, 1, 1)
-title('CSpk to 30 mW laser')
-
-rasterPETHBeh_choseY(CSpk_times, laserOnly15.times, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with15Laser,:)),...
-    'counts/trials', -0.2, 0, 0.2, 0)
-subplot(3, 1, 1)
-title('CSpk to 15 mW laser')
-
-% SS on strong puff + laser trials
-rasterPETHBeh_choseY(SS_times, USAnd30Laser20.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with30Laser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('SS to 20 ms puff + 30 mW laser')
-
-rasterPETHBeh_choseY(SS_times, USAnd15Laser20.UTimes+0.01, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with15Laser,:)),...
-    'counts/trials', -0.2, -0.04, 0.2, 1)
-subplot(3, 1, 1)
-title('SS to 20 ms puff + 15 mW laser')
-
-% SS on laser trials
-rasterPETHBeh_choseY(SS_times, laserOnly30.times, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with30Laser,:)),...
-    'counts/trials', -0.2, 0, 0.2, 0)
-subplot(3, 1, 1)
-title('SS to 30 mW laser')
-
-rasterPETHBeh_choseY(SS_times, laserOnly15.times, 0.3, -0.3:0.01:0.3, ...
-    trials.tm(1,:),...
-    mean(trials.eyelidpos(withLongPuff & with15Laser,:)),...
-    'counts/trials', -0.2, 0, 0.2, 0)
-subplot(3, 1, 1)
-title('SS to 15 mW laser')
 

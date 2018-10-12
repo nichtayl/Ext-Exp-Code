@@ -1,7 +1,7 @@
 %%% this is for outputting more usable arrays of spike times, trial times,
 %%% etc for PC recordings from Shogo's recording rig
 
-function [SS_times, CSpk_times] = makeRecMatFiles_ShogoRig(thisFile, sscodes, cspkcodes, sscspkcodes,...
+function [SS_times, CSpk_times] = makeRecMatFiles_ShogoRig_multipleMatFiles(thisFile, sscodes, cspkcodes, sscspkcodes,...
     oddcspkcodes, oddcspktimefileexists)
 
 SS_idx = [];

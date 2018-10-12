@@ -59,9 +59,9 @@ numframes=zeros(length(fnames),1);
 % %     cleaner = onCleanup(@() matlabpool('close'));
 % end
 
-disp('just before fnames loop')
+%disp('just before fnames loop')
 for i=1:length(fnames)
-    disp('got into fnames loop')
+    %disp('got into fnames loop')
 	[p,basename,ext]=fileparts(fnames{i});
 
     try
