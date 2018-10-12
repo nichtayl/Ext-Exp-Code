@@ -1,4 +1,13 @@
-function singlePCWithBehRasterPETHS(filebeg, puffDurs, laserAmps)
+% I added some 2 s pauses because MATLAB kept crashing, I think from trying
+% to deal with the figures
+
+% binval and rasterTime cells organized so that row corresponds to the
+% different values in puffDurs and columns correspond to different values
+% in laserAmps
+
+function [ssbinvals, cspkbinvals, ssRasterTimes, cspkRasterTimes, preTrialFR]...
+    =singlePCWithBehRasterPETHS(filebeg, puffDurs, ...
+    laserAmps, binedges, makeFig)
 
 %% load relelevant data arrays
 
@@ -47,21 +56,27 @@ end
 % also pull CSpk and SS times during trials so can make proper SS PETHs
 % centered on CSpks
 [preTrial_SS, preTrial_CSpk, totalTime] = getPreTrialSpikes(trialTs(goodTrials), 0.4, SS_times, CSpk_times);
-
+preTrialFR.SS = length(preTrial_SS)/totalTime;
+preTrialFR.CSpk = length(preTrial_CSpk)/totalTime;
 
 %% make a SS centered on CSpk histogram
 % needs to be focused on sorted parts
-colordef white
-rasterPETH_frequency(preTrial_SS, preTrial_CSpk, 0.050,-0.05:0.001:0.05) % not sure if this function is right
-xlabel('time from CSpk')
-ylabel('count/(bin duration*number of trials)')
-hold on
-plot([0 0], [0 150])
-ylim([0 150])
-title('SS centered on CSpk')
-saveas(gcf, strcat(filebeg, 'SSonCSpkPSTH.fig'))
-close all
-
+if makeFig
+    colordef white
+    rasterPETH_frequency(preTrial_SS, preTrial_CSpk, 0.050,-0.05:0.001:0.05) % not sure if this function is right
+    xlabel('time from CSpk')
+    ylabel('count/(bin duration*number of trials)')
+    hold on
+    plot([0 0], [0 150])
+    ylim([0 150])
+    title('SS centered on CSpk')
+    figurename = strcat(filebeg, 'SSonCSpkPSTH.fig');
+    if ~exist(figurename, 'file')
+        savefig(gcf, figurename, 'compact')
+    end
+    pause(2)
+    close gcf
+end
 
 
 %% calibrate MATLAB eyelid trace based on the minimum eyelid position during the 200 ms baseline on
@@ -99,17 +114,37 @@ relevantPuffDurs = puffDur(goodTrials);
 relevantLaserDurs = laserDur(goodTrials);
 relevantLaserAmps = laserAmp(goodTrials);
 
-% set binedges
-binedges = -0.3:0.01:0.3;
-
 % set rig-specific parameters
 tubingDelay = 0.01;
 
 % pulll subsets of trials and make plots
 for i = 1:length(puffDurs)
+    USOnly.times = relevantPuffTimes(relevantPuffDurs==puffDurs(i) &...
+        isnan(relevantLaserDurs));
+    behwithpuffOnly = filesThisSess & trials.c_usdur==puffDurs(i) & ...
+         trials.c_csdur==0;
+    % SS and CSpk on puff alone trials
+    [ssbinvals.puffOnly{i,1}, cspkbinvals.puffOnly{i,1}, ssRasterTimes.puffOnly{i,1},...
+        cspkRasterTimes.puffOnly{i,1}, check] = ...
+        rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
+        USOnly.times+tubingDelay, 0.3, binedges,...
+        trials.tm(1,:), mean(trials.eyelidpos(behwithpuffOnly,:)),...
+        'frequency', 'probability', -0.2, ...
+        NaN, NaN, 1, makeFig);
+    if makeFig
+        set(gcf, 'Position', [100 400 400 500])
+        subplot(3, 1, 1)
+        titlestring = strcat('SS & CSpk to puff:', num2str(puffDurs(i)), 'ms');
+        title(titlestring)
+        figurename = strcat(filebeg, 'SSCSpkTo', num2str(puffDurs(i)), 'msPuff.fig');
+        if ~exist(figurename, 'file')
+            savefig(gcf, figurename, 'compact')
+        end
+        pause(2)
+        close gcf
+    end
+    
     for m = 1:length(laserAmps)
-        USOnly.times = relevantPuffTimes(relevantPuffDurs==puffDurs(i) &...
-            isnan(relevantLaserDurs));
         laserOnly.times = relevantLaserTimes(relevantLaserDurs>0 & ...
             relevantPuffDurs==0 & relevantLaserAmps == laserAmps(m));
         USAndLaser.UTimes = relevantPuffTimes(relevantPuffDurs==puffDurs(i) & ...
@@ -118,8 +153,6 @@ for i = 1:length(puffDurs)
             relevantLaserDurs>0 & relevantLaserAmps == laserAmps(m));
         behwithlaserOnly = filesThisSess & trials.c_csdur>0 & trials.c_csnum == 8 ...
             & trials.laser.amp==laserAmps(m) & trials.c_usdur == 0;
-        behwithpuffOnly = filesThisSess & trials.c_usdur==puffDurs(i) & ...
-            trials.c_csdur==0;
         behwithlaserandpuff = filesThisSess & trials.c_usdur==puffDurs(i) &...
             trials.c_csdur>0 & trials.c_csnum==8 & trials.laser.amp==laserAmps(m);
         
@@ -127,58 +160,57 @@ for i = 1:length(puffDurs)
             isi = USAndLaser.UTimes(1) - USAndLaser.LTimes(1);
             
             % SS and CSpk on puff + laser trials
-            rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
+            [ssbinvals.laserpuff{i,m}, cspkbinvals.laserpuff{i,m}, ssRasterTimes.laserpuff{i,m},...
+                cspkRasterTimes.laserpuff{i,m}, check] = ...
+                rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
                 USAndLaser.UTimes+tubingDelay, 0.3, binedges,...
                 trials.tm(1,:)-(isi + tubingDelay),... % remember to subtract some time to align puff at 0
                 mean(trials.eyelidpos(behwithlaserandpuff,:)),...
                 'frequency', 'probability', -0.2, ...
-                -1*(isi + tubingDelay), 0.2, 1)
-            set(gcf, 'Position', [100 400 400 500])
-            subplot(3, 1, 1)
-            titlestring = strcat('SS & CSpk to puff:', num2str(puffDurs(i)), ...
-                'ms with laser:', num2str(laserAmps(m)), 'mW');
-            title(titlestring)
-            saveas(gcf, strcat(filebeg, 'SSCSpkTo', num2str(puffDurs(i)), 'msPuffAnd',...
-                num2str(laserAmps(m)), 'mWLaser.fig'))
-            close gcf
+                -1*(isi + tubingDelay), 0.2, 1, makeFig);
+            if makeFig
+                set(gcf, 'Position', [100 400 400 500])
+                subplot(3, 1, 1)
+                titlestring = strcat('SS & CSpk to puff:', num2str(puffDurs(i)), ...
+                    'ms with laser:', num2str(laserAmps(m)), 'mW');
+                title(titlestring)
+                figurename = strcat(filebeg, 'SSCSpkTo', num2str(puffDurs(i)), 'msPuffAnd',...
+                    num2str(laserAmps(m)), 'mWLaser.fig');
+                if ~exist(figurename, 'file')
+                    savefig(gcf, figurename, 'compact')
+                end
+                pause(2)
+                close gcf
+            end
             
         end
         
         if i == 1 && ~isempty(laserOnly.times) % only need to plot the laser alone trials during the first iteration of the outer loop
             
             % SS and CSpk on laser alone trials
-            rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
+            [ssbinvals.laserOnly{1,m}, cspkbinvals.laserOnly{1,m}, ssRasterTimes.laserOnly{1,m},...
+                cspkRasterTimes.laserOnly{1,m}, check] = ...
+                rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
                 laserOnly.times, 0.3, binedges,...
                 trials.tm(1,:), mean(trials.eyelidpos(behwithlaserOnly,:)),...
                 'frequency', 'probability', -0.2, ...
-                0, 0.2, 0)
-            set(gcf, 'Position', [100 400 400 500])
-            subplot(3, 1, 1)
-            titlestring = strcat('SS & CSpk to laser:', num2str(laserAmps(m)), 'mW');
-            title(titlestring)
-            saveas(gcf, strcat(filebeg, 'SSCSpkTo', num2str(laserAmps(m)), ...
-                'mWLaser.fig'))
-            close gcf
+                0, 0.2, 0, makeFig);
+            if makeFig
+                set(gcf, 'Position', [100 400 400 500])
+                subplot(3, 1, 1)
+                titlestring = strcat('SS & CSpk to laser:', num2str(laserAmps(m)), 'mW');
+                title(titlestring)
+                figurename = strcat(filebeg, 'SSCSpkTo', num2str(laserAmps(m)), ...
+                    'mWLaser.fig');
+                if ~exist(figurename, 'file')
+                    savefig(gcf, figurename, 'compact')
+                end
+                pause(2)
+                close gcf
+            end
             
         end
-        
-        if m == 1 % only need to do the puff only for the first laser duration
-            
-            % SS and CSpk on puff alone trials
-            rasterPETHBeh_SSAndCSpk_choseY(SS_times, CSpk_times,...
-                USOnly.times+tubingDelay, 0.3, binedges,...
-                trials.tm(1,:), mean(trials.eyelidpos(behwithpuffOnly,:)),...
-                'frequency', 'probability', -0.2, ...
-                NaN, NaN, 1)
-            set(gcf, 'Position', [100 400 400 500])
-            subplot(3, 1, 1)
-            titlestring = strcat('SS & CSpk to puff:', num2str(puffDurs(i)), 'ms');
-            title(titlestring)
-            saveas(gcf, strcat(filebeg, 'SSCSpkTo', num2str(puffDurs(i)), 'msPuff.fig'))
-            close gcf
-            
-        end
-        
+                
     end
 end
 
