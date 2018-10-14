@@ -11,6 +11,10 @@
 
 clear
 
+% specify where the code is being run
+% computer = 'ALBUS';
+computer = 'OREK';
+
 recordings = {'OK168_181001_01c_sortedAroundTrials.mat';...
     'OK168_181002_01a_sortedAroundTrials.mat';...
     'OK168_181004_01b_sortedAroundTrials.mat';...
@@ -36,7 +40,12 @@ for r = 1:rl
     
     mouse = recordings{r,1}(1:5);
     day = recordings{r,1}(7:12);
-    dirString = strcat('C:\olivia\data\ephys\', mouse, '\', day);
+    
+    if strcmpi(computer, 'ALBUS')
+        dirString = strcat('C:\olivia\data\ephys\', mouse, '\', day);
+    elseif strcmpi(computer, 'OREK')
+        dirString = strcat('C:\Users\kimol\Documents\data\extinction project\datasets\181012 zip up dataset for work at home\', mouse, '\', day);
+    end
     cd(dirString)
     
     fileBeg = recordings{r,1}(1:17);

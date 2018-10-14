@@ -55,9 +55,14 @@ end
 %% figure out the CSpk rate during the 200 ms before and 200 ms after starting a trial since this is what's been sorted and what comes before any stimuli are presented
 % also pull CSpk and SS times during trials so can make proper SS PETHs
 % centered on CSpks
-[preTrial_SS, preTrial_CSpk, totalTime] = getPreTrialSpikes(trialTs(goodTrials), 0.4, SS_times, CSpk_times);
-preTrialFR.SS = length(preTrial_SS)/totalTime;
-preTrialFR.CSpk = length(preTrial_CSpk)/totalTime;
+[sortedSSTimes, preTrial_SS, totalTimeSS, preTrialFR.SS] = ...
+    getPreTrialSpikes(SS_times, trialTs(goodTrials), 0.2);
+[sortedCSpkTimes, preTrial_CSpk, totalTimeCSpk, preTrialFR.CSpk] = ...
+    getPreTrialSpikes(CSpk_times, trialTs(goodTrials), 0.2);
+
+%% figure out whether a cell has a CSpk response to the puff versus random stuff
+[hasCSpkResponse.puff, realValOutlyingness] = checkForResponse_probability(spikeTimes, trialTimes,...
+    eventTimes, preTrialWin, winOfInterest, makeFig);
 
 %% make a SS centered on CSpk histogram
 % needs to be focused on sorted parts
