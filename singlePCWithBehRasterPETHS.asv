@@ -73,11 +73,11 @@ output.CSpkRate = NaN;
 
 output.SSToPuff = NaN;
 output.SSToPuffLat = NaN;
-output.SSToPuffDev = NaN;
+output.SSToPuffRate = NaN;
 
 output.SSToLas = NaN;
 output.SSToLasLat = NaN;
-output.SSToLasDev = NaN;
+output.SSToLasRate = NaN;
 
 output.SSRate = NaN;
 
@@ -152,12 +152,6 @@ if sum(relevantPuffDurs>0 & isnan(relevantLaserTimes))>0
         behwithpuffOnly = filesThisSess & trials.c_usdur==puffDurs(i) & ...
             trials.c_csdur==0;
         
-        [hasCSpk, CSpkChangeDir, CSpkToEventProb, medianCSpkLatency,...
-            hasSS, SSChangeDir, SSToEventRate, SSLat, SSDeviation] = ...
-            gatherSpikeResponseMetrics(CSpk_times, SS_times, relevantTrialTimes,...
-            USOnly.times+tubingDelay, 0.005, -0.2, 0.05, 1);
-        
-        
         % check whether there is a CSpk response to the puff & save values
         [hasCSpkToPuff(i,1), outlyingnessCSpkToPuff(i,1), CSpkToPuffDir(i,1), output.CSpkToPuffProb(i,1), spikeProbs] = ...
             checkForResponse_chooseMetric(CSpk_times, relevantTrialTimes,...
@@ -182,7 +176,17 @@ if sum(relevantPuffDurs>0 & isnan(relevantLaserTimes))>0
             checkForResponse_chooseMetric(SS_times,...
             relevantTrialTimes(relevantPuffDurs>0 & isnan(relevantLaserDurs)),...
             USOnly.times+tubingDelay, -0.2, 0.05, 'frequency', makeFig);
-                
+        if hasSSToPuff(i,1)
+            output.SSToPuff(i,1) = SSToPuffDir(i,1);
+            
+            % check the latency of the responses to the puff, using the
+            % same outlier analysis to detect when the SS FR starts
+            % increasing
+            [latencySummary] = ...
+                getLatencies_fastEvent(SS_times, USOnly.times+tubingDelay, 0.05, 0.005, S);
+            
+        end
+        
         if hasSSToPuff(i,1) || hasCSpkToPuff(i,1)
             % SS and CSpk on puff alone trials
             [ssbinvals.puffOnly{i,1}, cspkbinvals.puffOnly{i,1}, ssRasterTimes.puffOnly{i,1},...
@@ -204,17 +208,6 @@ if sum(relevantPuffDurs>0 & isnan(relevantLaserTimes))>0
                 pause(2)
                 close gcf
             end
-        end
-        
-        if hasSSToPuff(i,1)
-            output.SSToPuff(i,1) = SSToPuffDir(i,1);
-            
-            % check the latency of the responses to the puff, using the
-            % same outlier analysis to detect at which bin the SS FR starts
-            % increasing
-            [output.SSToPuffLat(i,1) output.SSToPuffDev(i,1) medabsdev, medianval, thisval] = ...
-                getLatencies_fastEvent(SS_times, USOnly.times+tubingDelay, 0.4, 0.05, 0.005, SSToPuffDir(i,1));
-            
         end
     end
 else

@@ -12,8 +12,8 @@
 clear
 
 % specify where the code is being run
-% computer = 'ALBUS';
-computer = 'OREK';
+ computer = 'ALBUS';
+% computer = 'OREK';
 
 recordings = {'OK168_181001_01c_sortedAroundTrials.mat';...
     'OK168_181002_01a_sortedAroundTrials.mat';...

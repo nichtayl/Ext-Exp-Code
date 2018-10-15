@@ -1,0 +1,84 @@
+%outputs mean & median latencies to event, also number of events in window
+%compared to the number of possible windows
+
+function [latencySummary] = ...
+    getLatencies_fastEvent(eventTimes, triggerTimes, usabledur, windur, bindur, changeDir)
+
+    
+    [eventdiffs, eventRasterTimes, checkTheseTimestamps]=makeRaster(triggerTimes, ...
+        eventTimes, 0.4, [1 1 0], 1, 0);
+    binedges = [-0.4:bindur:0.4];
+    [yvals, ymax, binvalues]=getHistLineVals('frequency', eventdiffs, triggerTimes,...
+        binedges, bindur, eventTimes);
+    baselineWinStartBin = 1;
+    baselineWinEndBin = find(binedges==0);
+    baselineVals = binvalues(baselineWinStartBin:baselineWinEndBin-1);
+    for i = baselineWinEndBin:length(binedges)-1
+       if binedges(i) > windur
+           break
+       end
+       [hasResponse, outlyingness, outlyingdir] = isOutlier_MADMethod([baselineVals',binvalues(i)]); % add the value of interest to the end of the sent vector so the function knows what to do with it
+       if hasResponse && outlyingdir==changeDir
+           eventlatency = binedges(i);
+           figure
+           bincenters = binedges(1:baselineWinEndBin-1)-(bindur/2);
+           bar(bincenters, baselineVals)
+           hold on
+           plot([bins(b) bins(b)], [0 binvalues(i)], 'Color', [1 0 0], 'LineWidth', 2)
+           pause
+           break
+       end
+    end
+    
+   
+    
+    for i = 1:length(triggerTimes)
+        baselineWinStart = triggerTimes(i,1)-usabledur;
+        baselineWinEnd = triggerTimes(i,1);
+        bins = baselineWinStart:bindur:baselineWinEnd;
+        binvals = nan(1,length(bins)-1);
+        bincenters = bins(1:end-1) + (bindur/2);
+        % get FR in bins during the baseline window
+        for b = 1:length(bins)-2
+            spikesThisBin = eventTimes>=bins(b) & eventTimes<bins(b+1);
+            binvals(1,b) = sum(spikesThisBin)/bindur; % calculate firing frequency in this bin
+        end
+        spikesThisBin = eventTimes>=bins(end-1) & eventTimes<=bins(end);
+        binvals(1,end) = sum(spikesThisBin)/bindur;
+        
+        % get FR in bins from the trigger time, stop when outlier is found
+        % or you run out of bins
+        checkWinStart = triggerTimes(i,1);
+        checkWinEnd = triggerTimes(i,1) + windur;
+        bins = checkWinStart:bindur:checkWinEnd;
+        for b = 1:length(bins)-2
+            spikesThisBin = eventTimes>=bins(b) & eventTimes<bins(b+1);
+            thisBinFreq = sum(spikesThisBin)/bindur;
+            [hasResponse, outlyingness, outlyingdir] = isOutlier_MADMethod([binvals,thisBinFreq]); % add the value of interest to the end of the sent vector so the function knows what to do with it
+            if hasResponse && outlyingdir==changeDir
+                eventlatencies(i,1) = bins(b)-triggerTimes(i,1);
+                figure
+                bar(bincenters, binvals)
+                hold on
+                plot([bins(b) bins(b)], [0 thisBinFreq], 'Color', [1 0 0], 'LineWidth', 2)
+                pause
+                break
+            end
+        end
+        if ~hasResponse
+            spikesThisBin = eventTimes>=bins(end-1) & eventTimes<=bins(end);
+            thisBinFreq = sum(spikesThisBin)/bindur;
+            [hasResponse, outlyingness, outlyingdir] = isOutlier_MADMethod([binvals,thisBinFreq]); % add the value of interest to the end of the sent vector so the function knows what to do with it
+            if hasResponse
+                eventlatencies(i,1) = bins(end-1)-triggerTimes(i,1);
+            end
+        end
+        
+    end
+    
+    latencySummary(1,1) = nanmean(eventlatencies);
+    latencySummary(1,2) = nanmedian(eventlatencies);
+    latencySummary(1,3) = sum(~isnan(eventlatencies));
+    latencySummary(1,4) = length(eventlatencies);
+    
+end
