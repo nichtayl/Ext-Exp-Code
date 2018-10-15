@@ -29,9 +29,10 @@ for i = 1:length(trialTimes)
     end
     
     % do the real trials
-    if (eventTimes(eventidx,1) < trialTimes(i,1)) || ...
-            (eventTimes(eventidx,1) > trialTimes(i,1) + 1) ||...
-            (eventidx > length(eventTimes))
+    if eventidx > length(eventTimes)
+        wasSpike(i, n+1) = NaN;
+    elseif (eventTimes(eventidx,1) < trialTimes(i,1)) || ...
+            (eventTimes(eventidx,1) > trialTimes(i,1) + 1)
         wasSpike(i, n+1) = NaN;
     else
         thiswinbeg = eventTimes(eventidx,1);

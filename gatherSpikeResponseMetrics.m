@@ -13,6 +13,8 @@ function [hasCSpk, CSpkChangeDir, CSpkToEventProb, medianCSpkLatency,...
             [cspklatsummary] = ...
                 getLatencies_lowProbEvent(CSpk_times, eventTimes, eventTimes+0.1);
             medianCSpkLatency = cspklatsummary(1,2);            
+        else
+            medianCSpkLatency = NaN;
         end
         
              
@@ -26,6 +28,11 @@ function [hasCSpk, CSpkChangeDir, CSpkToEventProb, medianCSpkLatency,...
             [SSLat, SSDeviation, medianabsdev, medianval, thisval] = ...
                 getLatencies_fastEvent(SS_times, eventTimes, sortedPreTime,...
                 winOfInterest, ssBinSize, SSChangeDir);
-            
+        else
+            SSLat = NaN;
+            SSDeviation = NaN;
+            medianabsdev = NaN;
+            medianval = NaN;
+            thisval = NaN;
         end
 end
