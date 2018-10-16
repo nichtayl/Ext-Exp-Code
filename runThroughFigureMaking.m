@@ -36,6 +36,8 @@ cspklatencies.laserOnly = cell(rl,1);
 cspklatencies.laserpuff.puff = cell(rl,1);
 cspklatencies.laserpuff.laser = cell(rl,1);
 
+animalData = []; % doing this for now because I am too tired to organize the output better
+
 for r = 1:rl
     
     mouse = recordings{r,1}(1:5);
@@ -57,27 +59,9 @@ for r = 1:rl
     binedges = -0.3:0.01:0.3;
     makeFig = 0;
     
-    [ssbinvals, cspkbinvals, ssRasterTimes, cspkRasterTimes, preTrialFR] = ...
+    [ssbinvals, cspkbinvals, ssRasterTimes, cspkRasterTimes, output] = ...
         singlePCWithBehRasterPETHS(fileBeg, puffDurs, laserAmps, binedges, makeFig);
     
-    ssFR(r,1) = preTrialFR.SS;
-    cspkFR(r,1) = preTrialFR.CSpk;
-    
-    %% puff only data
-    % get latency to first spike (find the first value > 0)
-    [sslatencies.puffOnly{r,1}, cspklatencies.puffOnly{r,1}] = ...
-        getLatenciesFromRaster(ssRasterTimes.puffOnly, cspkRasterTimes.puffOnly, 0, 0.1);
-    
-    %% laser only data
-    [sslatencies.laserOnly{r,1}, cspklatencies.laserOnly{r,1}] = ...
-        getLatenciesFromRaster(ssRasterTimes.laserOnly, cspkRasterTimes.laserOnly, 0, 0.1);
-    
-    
-    %% puff and laser data
-    [sslatencies.laserpuff.laser{r,1}, cspklatencies.laserpuff.laser{r,1}] = ...
-        getLatenciesFromRaster(ssRasterTimes.laserpuff, cspkRasterTimes.laserpuff, -0.04, 0);
-    [sslatencies.laserpuff.puff{r,1}, cspklatencies.laserpuff.puff{r,1}] = ...
-        getLatenciesFromRaster(ssRasterTimes.laserpuff, cspkRasterTimes.laserpuff, 0, 0.1);
-
+    animalData = [animalData; output];
     
 end
