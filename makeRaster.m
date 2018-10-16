@@ -7,7 +7,7 @@ rasterTimes = cell(length(triggers),1);
 for i = 1:length(triggers)
     
     % raster for this trial
-    eventsOfInterest = events(abs(events-triggers(i,1))<timerange); % only checks sspks occurring within timerange ms of the CSpk being considered
+    eventsOfInterest = events(abs(events-triggers(i,1))<timerange); % only checks sspks occurring within timerange ms of the trigger being considered
     rasterTimes{i,1} = eventsOfInterest-triggers(i,1);
     if ~isempty(rasterTimes) && makeFig
         for r = 1:length(rasterTimes{i,1})
