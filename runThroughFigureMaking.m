@@ -38,29 +38,26 @@ cspklatencies.laserpuff.laser = cell(rl,1);
 
 animalData = []; % doing this for now because I am too tired to organize the output better
 
+if strcmpi(computer, 'ALBUS')
+    dirString = 'C:\olivia\data\ephys\';
+elseif strcmpi(computer, 'OREK')
+    dirString = 'C:\Users\kimol\Documents\data\extinction project\datasets\181012 zip up dataset for work at home\';
+end
+
 for r = 1:rl
     
     mouse = recordings{r,1}(1:5);
     day = recordings{r,1}(7:12);
     
-    if strcmpi(computer, 'ALBUS')
-        dirString = strcat('C:\olivia\data\ephys\', mouse, '\', day);
-    elseif strcmpi(computer, 'OREK')
-        dirString = strcat('C:\Users\kimol\Documents\data\extinction project\datasets\181012 zip up dataset for work at home\', mouse, '\', day);
-    end
-    cd(dirString)
+    cd(strcat(dirString, mouse, '\\', day));
     
     fileBeg = recordings{r,1}(1:17);
-    puffFile = strcat(fileBeg, 'puffDurs.mat');
-    laserFile = strcat(fileBeg, 'laserAmps.mat');
-    load(puffFile)
-    load(laserFile)
     
     binedges = -0.3:0.01:0.3;
     makeFig = 0;
     
     [ssbinvals, cspkbinvals, ssRasterTimes, cspkRasterTimes, output] = ...
-        singlePCWithBehRasterPETHS(fileBeg, puffDurs, laserAmps, binedges, makeFig);
+        singlePCWithBehRasterPETHS(fileBeg, binedges, makeFig);
     
     animalData = [animalData; output];
     

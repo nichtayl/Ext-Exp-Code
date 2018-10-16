@@ -6,10 +6,12 @@
 % in laserAmps
 
 function [ssbinvals, cspkbinvals, ssRasterTimes, cspkRasterTimes, output]...
-    =singlePCWithBehRasterPETHS(fileBeg, puffDurs, ...
-    laserAmps, binedges, makeFig)
+    =singlePCWithBehRasterPETHS(fileBeg, binedges, makeFig)
 
-%% load relelevant data arrays
+%% load relevant data arrays
+
+load(strcat(fileBeg, 'puffDurs.mat')); % loads as puffDurs
+load(strcat(fileBeg, 'laserAmps.mat'); % loads as laserAmps
 
 % electrophysiology info (recall that spikes only sorted in the -0.2 s
 % before trial onset and 1 s after trial onset)
@@ -38,7 +40,7 @@ goodTrials = [];
 files = dir('*badTrials*');
 if ~isempty(files)
     tempstr = strcat(fileBeg, 'badTrials.mat');
-    load(tempstr)
+    load(tempstr); % loads as badTrials
     badTrials = sort(badTrials);
     
     for t = 1:length(tempVector)
@@ -63,9 +65,9 @@ relevantLaserAmps = laserAmp(goodTrials);
 % also pull CSpk and SS times during trials so can make proper SS PETHs
 % centered on CSpks
 [sortedSSTimes, numSS, totalTimeSS, output.SSRate] = ...
-    getPreTrialSpikes(SS_times, trialTs(goodTrials), 0.2);
+    getPreTrialSpikes(SS_times, relevantTrialTimes, 0.2);
 [sortedCSpkTimes, numCSpk, totalTimeCSpk, output.CSpkRate] = ...
-    getPreTrialSpikes(CSpk_times, trialTs(goodTrials), 0.2);
+    getPreTrialSpikes(CSpk_times, relevantTrialTimes, 0.2);
 
 
 %% make a SS centered on CSpk histogram
